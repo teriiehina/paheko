@@ -1,0 +1,21 @@
+<h2 class="ruler">Reçus de paiements</h2>
+
+{{:assign var="codes." value="4%"}}
+{{:assign var="codes." value="7%"}}
+
+<table class="list">
+{{#transactions user=$logged_user.id order="date DESC" credit_codes=$codes}}
+	<tr>
+		<th>{{$date|date_short}}</th>
+		<td>{{$label}}</td>
+		<td>{{$credit|money_currency}}</td>
+		<td class="actions">
+			{{if $pdf_enabled}}
+				{{:linkbutton href="%s?me=%d&print=pdf"|args:$module.url:$id shape="download" label="Télécharger le reçu (PDF)"}}
+			{{else}}
+				{{:linkbutton href="%s?me=%d"|args:$module.url:$id target="_dialog" shape="document" label="Voir le reçu"}}
+			{{/if}}
+		</td>
+	</tr>
+{{/transactions}}
+</table>

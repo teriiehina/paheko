@@ -1,0 +1,46 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"properties": {
+		"type": {
+			"type": "string",
+			"enum": ["line"]
+		},
+		"claim": {
+			"type": "string"
+		},
+		"label": {
+			"description": "Libellé",
+			"type": ["string"]
+		},
+		"account": {
+			"description": "Code comptable",
+			"type": ["string", "null"]
+		},
+		"category": {
+			"description": "Catégorie",
+			"type": ["string", "null"]
+		},
+		"description": {
+			"description": "Description",
+			"type": ["string", "null"]
+		},
+		"amount": {
+			"description": "Montant",
+			"type": "integer"
+		},
+		"reference": {
+			"description": "Réf.",
+			"type": ["string", "null"]
+		},
+		"date": {
+			"description": "Date",
+			"type": ["string", "null"]
+		},
+		"id_project": {
+			"description": "Projet",
+			"type": ["integer", "null"]
+		}
+	},
+	"required": ["type", "claim", "label", "account", "category", "description", "amount", "reference", "date", "id_project"]
+}

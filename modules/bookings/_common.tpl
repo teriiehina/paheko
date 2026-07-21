@@ -1,0 +1,20 @@
+{{:assign var="days"
+	monday    = "lundi"
+	tuesday   = "mardi"
+	wednesday = "mercredi"
+	thursday  = "jeudi"
+	friday    = "vendredi"
+	saturday  = "samedi"
+	sunday    = "dimanche"
+}}
+
+{{:assign var="frequencies"
+	only   = "seulement le"
+	this   = "tous les"
+	first  = "premier"
+	second = "second"
+	third  = "troisième"
+	fourth = "quatrième"
+	fifth  = "cinquième"
+	last   = "dernier"
+}}

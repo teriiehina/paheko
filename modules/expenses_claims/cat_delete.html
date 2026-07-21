@@ -1,0 +1,18 @@
+{{#restrict block=true section="config" level="admin"}}{{/restrict}}
+
+{{#load type="category" key=$_GET.key assign="cat"}}
+	{{:assign key=$key}}
+{{else}}
+	{{:error message="La catégorie indiquée n'existe pas"}}
+{{/load}}
+
+{{#form on="delete"}}
+	{{:delete key=$key}}
+	{{:redirect to="./config.html"}}
+{{/form}}
+
+{{:admin_header title="Supprimer"}}
+
+{{:delete_form legend="Supprimer une catégorie" warning="Supprimer la catégorie '%s' ?"|args:$cat.label}}
+
+{{:admin_footer}}

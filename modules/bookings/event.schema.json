@@ -1,0 +1,65 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"properties": {
+		"type": {
+			"type": "string",
+			"enum": ["event"]
+		},
+		"label": {
+			"type": "string"
+		},
+		"description": {
+			"type": ["null", "string"]
+		},
+		"use_openings": {
+			"type": "boolean"
+		},
+		"max_weeks": {
+			"type": "integer"
+		},
+		"openings_seats": {
+			"type": ["null", "integer"]
+		},
+		"openings_slots": {
+			"type": ["null", "integer"]
+		},
+		"openings_delay": {
+			"type": ["null", "integer"]
+		},
+		"use_closings": {
+			"type": "boolean"
+		},
+		"fields": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"type": {
+						"type": "string"
+					},
+					"label": {
+						"type": "string"
+					},
+					"help": {
+						"type": ["string", "null"]
+					},
+					"required": {
+						"type": "boolean"
+					}
+				},
+				"required": ["type", "label", "help"]
+			}
+		},
+		"email": {
+			"type": "boolean"
+		},
+		"archived": {
+			"type": "boolean"
+		},
+		"notify_email": {
+			"type": ["string", "null"]
+		}
+	},
+	"required": ["type", "label", "description", "use_openings", "openings_seats", "openings_slots", "openings_delay", "use_closings", "fields", "email", "archived", "notify_email"]
+}

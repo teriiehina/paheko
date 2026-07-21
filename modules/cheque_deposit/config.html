@@ -1,0 +1,47 @@
+{{if $module.config.accounts|gettype === 'string'}}
+	{{:include file="/receipt_donation/_upgrade.tpl" keep="module.config.accounts"}}
+{{/if}}
+
+{{#form on="save"}}
+	{{if !$_POST.accounts|count}}
+		{{:error message="Aucun compte n'a été renseigné."}}
+	{{/if}}
+
+	{{:save key="config"
+		accounts=$_POST.accounts|arrayval
+	}}
+	{{:redirect to="?ok=1"}}
+{{/form}}
+
+{{:admin_header title="Configuration bordereau de remise de chèques"}}
+
+{{:form_errors}}
+
+{{if $_GET.ok}}
+	<p class="block confirm">Configuration enregistrée.</p>
+{{/if}}
+
+<form method="post" action="">
+
+<fieldset>
+	<legend>Configuration</legend>
+	<dl>
+		{{:assign var="default_account.5112" value="5112 — Chèques en attente de dépôt"}}
+		{{:input required=true name="accounts" multiple=true target="!acc/charts/accounts/selector.php?types=3&key=code" type="list" label="Comptes liés aux remises de chèques" source=$module.config default=$default_account}}
+		<dd class="help">
+			Pour chaque compte indiqué dans ce champ, le formulaire de remise de chèque sera proposé (en dessous de la fiche de l'écriture).
+		</dd>
+	</dl>
+</fieldset>
+
+<p class="help">
+	Astuce&nbsp;: pour faire apparaître le numéro (RIB) du compte bancaire dans le bordereau, inscrire celui-ci dans la description du compte bancaire au plan comptable.
+</p>
+
+<p class="submit">
+	{{:button type="submit" name="save" label="Enregistrer" shape="right" class="main"}}
+</p>
+
+</form>
+
+{{:admin_footer}}

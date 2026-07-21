@@ -1,0 +1,21 @@
+{{#restrict section="users" level=$module.config.manage_access|or:'admin'}}
+{{else}}
+	{{#restrict section="config" level="admin" block=true}}
+	{{/restrict}}
+{{/restrict}}
+
+{{#load key=$_GET.id type="event" assign="event"}}
+{{else}}
+	{{:error message="Événément introuvable"}}
+{{/load}}
+
+{{#form on="delete"}}
+	{{:delete where="key = :key OR $$.event = :key" :key=$event.key}}
+	{{:redirect to="./"}}
+{{/form}}
+
+{{:admin_header title="Supprimer un événement" current="module_bookings"}}
+
+{{:delete_form legend="Supprimer cet événement ?" warning="Supprimer l'événement \"%s\" ?"|args:$event.label info="Les créneaux et réservations liées seront perdues."}}
+
+{{:admin_footer}}

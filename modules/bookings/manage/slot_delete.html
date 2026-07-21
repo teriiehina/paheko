@@ -1,0 +1,21 @@
+{{#restrict section="users" level=$module.config.manage_access|or:'admin'}}
+{{else}}
+	{{#restrict section="config" level="admin" block=true}}
+	{{/restrict}}
+{{/restrict}}
+
+{{#load key=$_GET.id type="slot" assign="slot"}}
+{{else}}
+	{{:error message="Événément introuvable"}}
+{{/load}}
+
+{{#form on="delete"}}
+	{{:delete where="key = :key OR $$.slot = :key" :key=$slot.key}}
+	{{:redirect to="./event_slots.html?id=%s"|args:$slot.event}}
+{{/form}}
+
+{{:admin_header title="Supprimer un créneau" current="module_bookings"}}
+
+{{:delete_form legend="Supprimer ce créneau ?" warning="Supprimer le créneau ?" info="Les réservations liées à ce créneau seront perdues."}}
+
+{{:admin_footer}}

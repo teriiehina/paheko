@@ -1,0 +1,39 @@
+{{:admin_header title="Envoyer un reçu"}}
+
+{{#transaction_users id_transaction=$_GET.id|intval limit=1 assign="user"}}
+{{/transaction_users}}
+
+{{#form on="send"}}
+	{{:assign var="name" value=$_POST.name|url_encode}}
+	{{:mail
+		to=$_POST.email_to|trim
+		subject=$_POST.email_subject|trim
+		body=$_POST.email_body|trim
+		attach_from="./index.html?id=%d&print=pdf&name=%s"|args:$_GET.id:$name
+	}}
+	{{:redirect to="send.html?id=%d&sent"|args:$_GET.id}}
+{{/form}}
+
+{{if $_GET.sent !== null}}
+	<p class="block confirm">Le reçu a bien été envoyé par e-mail.</p>
+{{/if}}
+
+{{:form_errors}}
+
+<form method="post" action="">
+	<fieldset>
+		<legend>Envoyer un reçu</legend>
+		<dl>
+			{{:input type="text" name="name" required=true default=$user._name label="Nom de la personne à inscrire sur le reçu"}}
+			{{:input type="email" name="email_to" required=true default=$user._email label="Adresse du destinataire"}}
+			{{:input name="email_subject" type="text" source=$module.config default="Votre reçu" label="Sujet du message" required=true}}
+			{{:input name="email_body" type="textarea" cols="70" rows=7 source=$module.config default="Bonjour !\n\nVeuillez trouver ci-joint votre reçu au format PDF." label="Corps du message" required=true}}
+		</dl>
+	</fieldset>
+	<p class="submit">
+		{{:button type="submit" label="Envoyer" name="send" shape="right" class="main"}}
+	</p>
+</form>
+
+
+{{:admin_footer}}

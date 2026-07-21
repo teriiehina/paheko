@@ -1,0 +1,57 @@
+{{#restrict section="users" level=$module.config.manage_access|or:'admin'}}
+	{{:assign var="access_config" value=true}}
+{{else}}
+	{{#restrict section="config" level="admin"}}
+		{{:assign var="access_config" value=true}}
+	{{/restrict}}
+{{/restrict}}
+{{#restrict section="users" level=$module.config.access|or:'write'}}
+	{{:assign var="access_bookings" value=true}}
+{{/restrict}}
+
+{{if $access_config || $access_bookings}}
+<nav class="tabs">
+	{{if $current == 'config'}}
+		<aside>
+		{{if $event}}
+			{{:linkbutton shape="plus" label="Nouveau créneau" href="slot.html?new=%s"|args:$event.key target="_dialog"}}
+		{{else}}
+			{{:linkbutton shape="plus" label="Nouvel événement" href="event.html?new=1"}}
+		{{/if}}
+		</aside>
+	{{elseif $event}}
+		<aside>
+			{{:linkbutton shape="search" label="Chercher les inscriptions liées" href="?event=%s&past=%d&users=1"|args:$event.key:$_GET.past}}
+			{{:linkbutton shape="plus" label="Inscrire" href="./?event=%s"|args:$event.key}}
+		</aside>
+	{{/if}}
+
+	<ul>
+		<li{{if $current == 'index'}} class="current"{{/if}}><a href="{{$module.url}}">Inscription</a></li>
+	{{if $access_bookings}}
+		<li{{if $current == 'bookings'}} class="current"{{/if}}><a href="{{$module.url}}bookings.html">Voir les inscriptions</a></li>
+	{{/if}}
+		<li{{if $current == 'my_bookings'}} class="current"{{/if}}><a href="{{$module.url}}my_bookings.html">Mes réservations</a></li>
+	{{if $access_config}}
+		<li{{if $current == 'config'}} class="current"{{/if}}><a href="{{$module.url}}manage/">Configuration</a></li>
+	{{/if}}
+	</ul>
+
+	{{if $event}}
+		<ul class="sub">
+			<li class="title">{{$event.label}}</li>
+			{{if $current === 'bookings'}}
+			<li {{if $subcurrent === 'default'}}class="current"{{/if}}><a href="?event={{$event.key}}">Inscriptions</a></li>
+			<li {{if $subcurrent === 'past'}}class="current"{{/if}}><a href="?event={{$event.key}}&amp;past=1">Inscriptions passées</a></li>
+			{{/if}}
+		</ul>
+	{{elseif $current === 'config'}}
+		<ul class="sub">
+			<li{{if !$subcurrent}} class="current"{{/if}}><a href="{{$module.url}}manage/">Événements</a></li>
+			{{#restrict section="config" level="admin"}}
+			<li{{if $subcurrent === 'access'}} class="current"{{/if}}><a href="{{$module.url}}config.html">Accès</a></li>
+			{{/restrict}}
+		</ul>
+	{{/if}}
+</nav>
+{{/if}}

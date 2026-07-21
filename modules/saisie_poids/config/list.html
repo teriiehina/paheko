@@ -1,0 +1,31 @@
+{{#restrict section="config" level="admin" block=true}}{{/restrict}}
+
+{{if $_GET.type === 'object'}}
+	{{:assign type="object" title="Types d'objets"}}
+{{elseif $_GET.target === 'entry'}}
+	{{:assign type="category" title="Provenances"}}
+{{else}}
+	{{:assign type="category" title="Motifs de sortie"}}
+{{/if}}
+
+{{if $_GET.target === 'exit'}}
+	{{:assign target="exit" title="Sorties — "|cat:$title}}
+{{else}}
+	{{:assign target="entry" title="Entrées — "|cat:$title}}
+{{/if}}
+
+{{:admin_header title=$title current="module_saisie_poids"}}
+
+{{:include file="../_nav.html" current="config" type=$type target=$target}}
+
+{{#list type=$type target=$target schema="../%s.schema.json"|args:$type columns="label" order="label"}}
+	<tr>
+		<th>{{$label}}</th>
+		<td class="actions">
+			{{:linkbutton shape="edit" href="edit.html?key=%s&type=%s"|args:$key:$type label="Modifier" target="_dialog"}}
+			{{:linkbutton shape="delete" href="delete.html?key=%s&type=%s"|args:$key:$type label="Supprimer" target="_dialog"}}
+		</td>
+	</tr>
+{{/list}}
+
+{{:admin_footer}}

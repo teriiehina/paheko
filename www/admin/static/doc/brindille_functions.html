@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+	<html>
+	<head>
+		<title>Référence des fonctions Brindille</title>
+		<meta charset="utf-8" />
+		<style type="text/css">
+		body, form, p, div, hr, fieldset, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6 {
+			margin: 0;
+			padding: 0;
+		}
+		body {
+			font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+			padding: .8em;
+			background: #eee;
+		}
+		.web-content .nav ul {
+			list-style-type: none;
+			margin: -.8em;
+			margin-bottom: 1em;
+			padding: 1em;
+			background: #ddd;
+			border-bottom: 1px solid #999;
+			text-align: center;
+		}
+		.web-content .boutons ul {
+			list-style-type: none;
+			background: #ccc;
+			padding: .5em;
+			margin: 0;
+		}
+		.web-content .nav li, .web-content .boutons li {
+			display: inline-block;
+			margin: 0 1em;
+		}
+		.web-content .nav a, .web-content .boutons a {
+			display: inline-block;
+			background: #fff;
+			color: darkblue;
+			border-radius: .2em;
+			padding: .3em .5em;
+			font-size: 1.2em;
+		}
+		.web-content .nav strong a {
+			color: darkred;
+			box-shadow: 0px 0px 5px orange;
+		}
+		</style>
+		<link rel="stylesheet" type="text/css" href="../../../content.css" />
+	</head>
+	<body><div class="web-content"><div class="nav">
+<ul>
+<li><a href="modules.html">Modules</a></li>
+<li><a href="brindille.html">Documentation Brindille</a></li>
+<li><strong><a href="brindille_functions.html">Fonctions</a></strong></li>
+<li><a href="brindille_sections.html">Sections</a></li>
+<li><a href="brindille_modifiers.html">Filtres</a></li>
+</ul>
+</div><aside class="toc">
+	<ol>
+		<li><a href="#fonctions-generalistes">Fonctions généralistes</a>
+		<ol>
+			<li><a href="#assign">assign</a></li>
+			<li><a href="#break">break</a></li>
+			<li><a href="#continue">continue</a></li>
+			<li><a href="#debug">debug</a></li>
+			<li><a href="#error">error</a></li>
+			<li><a href="#exit">exit</a></li>
+			<li><a href="#form_errors">form_errors</a></li>
+			<li><a href="#http">http</a></li>
+			<li><a href="#include">include</a></li>
+			<li><a href="#captcha">captcha</a></li>
+			<li><a href="#mail">mail</a></li>
+			<li><a href="#redirect">redirect</a>
+			<ol>
+				<li><a href="#fonctionnement-simple">Fonctionnement simple</a></li>
+				<li><a href="#fonctionnement-avance-fenetre-modale">Fonctionnement avancé (fenêtre modale)</a>
+			</ol></li>
+			<li><a href="#api">api</a></li>
+			<li><a href="#csv">csv</a>
+			<ol>
+				<li><a href="#chargement-d-un-fichier-local">Chargement d'un fichier local</a>
+			</ol></li>
+			<li><a href="#signature"> signature</a>
+		</ol></li>
+		<li><a href="#fonctions-relatives-aux-modules">Fonctions relatives aux Modules</a>
+		<ol>
+			<li><a href="#save">save</a>
+			<ol>
+				<li><a href="#mise-a-jour">Mise à jour</a></li>
+				<li><a href="#recuperer-l-identifiant-du-document-ajoute">Récupérer l'identifiant du document ajouté</a></li>
+				<li><a href="#enregistrer-plusieurs-documents-en-une-fois">Enregistrer plusieurs documents en une fois</a></li>
+				<li><a href="#validation-avec-un-schema-json">Validation avec un schéma JSON</a>
+			</ol></li>
+			<li><a href="#delete">delete</a></li>
+			<li><a href="#read">read</a></li>
+			<li><a href="#admin_header">admin_header</a></li>
+			<li><a href="#admin_footer">admin_footer</a></li>
+			<li><a href="#delete_form">delete_form</a></li>
+			<li><a href="#dropdown">dropdown</a></li>
+			<li><a href="#input">input</a>
+			<ol>
+				<li><a href="#valeur-du-champ">Valeur du champ</a></li>
+				<li><a href="#types-de-champs-supportes">Types de champs supportés</a>
+			</ol></li>
+			<li><a href="#button">button</a></li>
+			<li><a href="#link">link</a></li>
+			<li><a href="#linkbutton">linkbutton</a></li>
+			<li><a href="#icon">icon</a>
+			<ol>
+				<li><a href="#formes-d-icones-disponibles">Formes d'icônes disponibles</a>
+			</ol></li>
+			<li><a href="#user_field">user_field</a></li>
+			<li><a href="#edit_user_field">edit_user_field</a>
+		</ol></li>
+		<li><a href="#gestion-de-fichiers-dans-les-modules">Gestion de fichiers dans les modules</a>
+		<ol>
+			<li><a href="#admin_files">admin_files</a></li>
+			<li><a href="#delete_file">delete_file</a>
+</li></ol></li></ol></aside><h1 id="fonctions-generalistes">Fonctions généralistes</h1>
+<h2 id="assign">assign</h2>
+<p>Permet d'assigner une valeur dans une variable.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Optionnel / obligatoire ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>.</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Assigner toutes les variables du contexte (section) actuel</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>var</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Nom de la variable à créer ou modifier</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>value</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Valeur de la variable</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>from</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Recopier la valeur depuis la variable ayant le nom fourni dans ce paramètre.</td>
+</tr>
+</tbody>
+</table>
+<p>Tous les autres paramètres sont considérés comme des variables à assigner.</p>
+<p>Exemple :</p>
+<pre><code>{{:assign blabla="Coucou"}}
+
+{{$blabla}}</code></pre>
+<p>Il est possible d'assigner toutes les variables d'une section dans une variable en utilisant le paramètre point <code>.</code> (<code>.="nom_de_variable"</code>). Cela permet de capturer le contenu d'une section pour le réutiliser à un autre endroit.</p>
+<pre><code>{{#pages uri="Informations" limit=1}}
+{{:assign .="infos"}}
+{{/pages}}
+
+{{$infos.title}}</code></pre>
+<p>Il est aussi possible de remonter dans les sections parentes en utilisant plusieurs points. Ainsi deux points remonteront à la section parente, trois points à la section parente de la section parente, etc.</p>
+<pre><code>{{#foreach from=$infos item="info"}}
+  {{#foreach from=$info item="sous_info"}}
+    {{if $sous_info.titre == 'Coucou'}}
+      {{:assign ..="info_importante"}}
+    {{/if}}
+  {{/foreach}}
+{{/foreach}}
+
+{{$info_importante.titre}}</code></pre>
+<p>En utilisant le paramètre spécial <code>var</code>, tous les autres paramètres passés sont ajoutés à la variable donnée en valeur :</p>
+<pre><code>{{:assign var="tableau" label="Coucou" name="Pif le chien"}}
+{{$tableau.label}}
+{{$tableau.name}}</code></pre>
+<p>De la même manière on peut écraser une variable avec le paramètre spécial <code>value</code>:</p>
+<pre><code>{{:assign var="tableau" value=$infos}}</code></pre>
+<p>Il est également possible de créer des tableaux avec la syntaxe <code>.</code> dans le nom de la variable :</p>
+<pre><code>{{:assign var="liste.comptes.530" label="Caisse"}}
+{{:assign var="liste.comptes.512" label="Banque"}}
+
+{{#foreach from=$liste.comptes}}
+{{$key}} = {{$value.label}}
+{{/foreach}}</code></pre>
+<p>Il est possible de rajouter des éléments à un tableau simplement en utilisant un point seul :</p>
+<pre><code>{{:assign var="liste.comptes." label="530 - Caisse"}}
+{{:assign var="liste.comptes." label="512 - Banque"}}</code></pre>
+<p>Enfin, il est possible de faire référence à une variable de manière dynamique en utilisant le paramètre spécial <code>from</code> :</p>
+<pre><code>{{:assign var="tableau" a="Coucou" b="Test !"}}
+{{:assign var="titre" from="tableau.%s"|args:"b"}}
+{{$titre}} -&gt; Affichera "Test !", soit la valeur de {{$tableau.b}}</code></pre>
+<h2 id="break">break</h2>
+<p>Interrompt une section.</p>
+<h2 id="continue">continue</h2>
+<p>Passe à l'itération suivante d'une section. Le code situé entre cette instruction et la fin de la section ne sera pas exécuté.</p>
+<pre><code>{{#foreach from=$list item="event"}}
+  {{if $event.date == '2023-01-01'}}
+    {{:continue}}
+  {{/if}}
+  {{$event.title}}
+{{/foreach}}</code></pre>
+<p>Il est possible de passer à l'itération suivante d'une section parente en utilisant un chiffre en paramètre :</p>
+<pre><code>{{#foreach from=$list item="event"}}
+  {{$event.title}}
+  {{#foreach from=$event.people item="person"}}
+    {{if $person.name == 'bohwaz'}}
+      {{:continue 2}}
+    {{/if}}
+    - {{$person.name}}
+  {{/foreach}}
+{{/foreach}}</code></pre>
+<h2 id="debug">debug</h2>
+<p>Cette fonction permet d'afficher le contenu d'une ou plusieurs variables :</p>
+<pre><code>{{:debug test=$title}}</code></pre>
+<p>Affichera :</p>
+<pre><code>array(1) {
+  ["test"] =&gt; string(6) "coucou"
+}</code></pre>
+<p>Si aucun paramètre n'est spécifié, alors toutes les variables définies sont renvoyées. Utile pour découvrir quelles sont les variables accessibles dans une section par exemple.</p>
+<h2 id="error">error</h2>
+<p>Affiche un message d'erreur et arrête le traitement à cet endroit.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Optionnel / obligatoire ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>message</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Message d'erreur à afficher</td>
+</tr>
+</tbody>
+</table>
+<p>Exemple :</p>
+<pre><code>{{if $_POST.nombre != 42}}
+    {{:error message="Le nombre indiqué n'est pas 42"}}
+{{/if}}</code></pre>
+<h2 id="exit">exit</h2>
+<p>Arrête l'exécution du code immédiatement.</p>
+<p>Utile pour le debug principalement :</p>
+<pre><code>{{if $condition == 1}}
+  {{:debug a=42}}
+  {{:exit}}
+{{/if}}</code></pre>
+<h2 id="form_errors">form_errors</h2>
+<p>Affiche les erreurs du formulaire courant (au format HTML).</p>
+<h2 id="http">http</h2>
+<p>Permet de modifier les entêtes HTTP renvoyés par la page. Cette fonction doit être appelée au tout début du squelette, avant tout autre code ou ligne vide.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Optionnel / obligatoire ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>code</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Modifie le code HTTP renvoyé. <a href="https://fr.wikipedia.org/wiki/Liste_des_codes_HTTP" rel="noreferrer noopener external" target="_blank">Liste des codes HTTP</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>type</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Modifie le type MIME renvoyé</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>download</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Force la page à être téléchargée sous le nom indiqué.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>inline</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Force la page à être affichée, et peut ensuite être téléchargée sous le nom indiqué (utile pour la génération de PDF : permet d'afficher le PDF dans le navigateur avant de le télécharger).</td>
+</tr>
+</tbody>
+</table>
+<p>Note : si le type <code>application/pdf</code> est indiqué (ou juste <code>pdf</code>), la page sera convertie en PDF à la volée. Il est possible de forcer le téléchargement du fichier en utilisant le paramètre <code>download</code>.</p>
+<p>Exemples :</p>
+<pre><code>{{:http code=404}}
+{{:http type="application/svg+xml"}}
+{{:http type="pdf" download="liste_membres_ca.pdf"}}</code></pre>
+<h2 id="include">include</h2>
+<p>Permet d'inclure un autre squelette.</p>
+<p>Paramètres :</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Optionnel / obligatoire ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>file</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Nom du squelette à inclure</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>keep</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Liste de noms de variables à conserver</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>capture</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Si renseigné, au lieu d'afficher le squelette, son contenu sera enregistré dans la variable de ce nom.</td>
+</tr>
+<tr>
+<td style="text-align: left;">…</td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Tout autre paramètre sera utilisé comme variable qui n'existea qu'à l'intérieur du squelette inclus.</td>
+</tr>
+</tbody>
+</table>
+<pre><code>{{* Affiche le contenu du squelette "navigation.html" dans le même répertoire que le squelette d'origine *}}
+{{:include file="./navigation.html"}}</code></pre>
+<p>Par défaut, les variables du squelette parent sont transmis au squelette inclus, mais les variables définies dans le squelette inclus ne sont pas transmises au squelette parent. Exemple :</p>
+<pre><code>{{* Squelette page.html *}}
+{{:assign title="Super titre !"}}
+{{:include file="./_head.html"}}
+{{$nav}}</code></pre>
+<pre><code>{{* Squelette _head.html *}}
+&lt;h1&gt;{{$title}}&lt;/h1&gt;
+{{:assign nav="Accueil &gt; %s"|args:$title}}</code></pre>
+<p>Dans ce cas, la dernière ligne du premier squelette (<code>{{$nav}}</code>) n'affichera rien, car la variable définie dans le second squelette n'en sortira pas. Pour indiquer qu'une variable doit être transmise au squelette parent, il faut utiliser le paramètre <code>keep</code>:</p>
+<pre><code>{{:include file="./_head.html" keep="nav"}}</code></pre>
+<p>On peut spécifier plusieurs noms de variables, séparés par des virgules, et utiliser la notation à points :</p>
+<pre><code>{{:include file="./_head.html" keep="nav,article.title,name"}}
+{{$nav}}
+{{$article.title}}
+{{$name}}</code></pre>
+<p>On peut aussi capturer le résultat d'un squelette dans une variable :</p>
+<pre><code>{{:include file="./_test.html" capture="test"}}
+{{:assign var="test" value=$test|replace:'TITRE':'Ceci est un titre'}}
+{{$test}}</code></pre>
+<p>Il est possible d'assigner de nouvelles variables au contexte du include en les déclarant comme paramètres tout comme on le ferait avec <code>{{:assign}}</code> :</p>
+<pre><code>{{:include file="./_head.html" title='%s documentation'|args:$doc.label visitor=$user}}</code></pre>
+<h2 id="captcha">captcha</h2>
+<p>Permet de générer une question qui doit être répondue correctement par l'utilisateur pour valider une action. Utile pour empêcher les robots spammeurs d'effectuer une action.</p>
+<p>L'utilisation simplifiée utilise un de ces deux paramètres :</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>html</code></td>
+<td style="text-align: left;">Si <code>true</code>, crée un élément de formulaire HTML et le texte demandant à l'utilisateur de répondre à la question</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>verify</code></td>
+<td style="text-align: left;">Si <code>true</code>, vérifie que l'utilisateur a correctement répondu à la question</td>
+</tr>
+</tbody>
+</table>
+<p>L'utilisation avancée utilise d'abord ces deux paramètres :</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>assign_hash</code></td>
+<td style="text-align: left;">Nom de la variable où assigner le hash (à mettre dans un <code>&lt;input type="hidden" /&gt;</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>assign_number</code></td>
+<td style="text-align: left;">Nom de la variable où assigner le nombre de la question (à afficher à l'utilisateur)</td>
+</tr>
+</tbody>
+</table>
+<p>Puis on vérifie :</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>verify_hash</code></td>
+<td style="text-align: left;">Valeur qui servira comme hash de vérification (valeur du <code>&lt;input type="hidden" /&gt;</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>verify_number</code></td>
+<td style="text-align: left;">Valeur qui représente la réponse de l'utilisateur</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>assign_error</code></td>
+<td style="text-align: left;">Si spécifié, le message d'erreur sera placé dans cette variable, sinon il sera affiché directement.</td>
+</tr>
+</tbody>
+</table>
+<p>Exemple :</p>
+<pre><code>{{if $_POST.send}}
+  {{:captcha verify_hash=$_POST.h verify_number=$_POST.n assign_error="error"}}
+  {{if $error}}
+    &lt;p class="alert"&gt;Mauvaise réponse&lt;/p&gt;
+  {{else}}
+    ...
+  {{/if}}
+{{/if}}
+
+&lt;form method="post" action=""&gt;
+{{:captcha assign_hash="hash" assign_number="number"}}
+&lt;p&gt;Merci de recopier le nombre suivant en chiffres : &lt;tt&gt;{{$number}}&lt;/tt&gt;&lt;/p&gt;
+&lt;p&gt;
+  &lt;input type="text" name="n" placeholder="1234" /&gt;
+  &lt;input type="hidden" name="h" value="{{$hash}}" /&gt;
+  &lt;input type="submit" name="send" /&gt;
+&lt;/p&gt;
+&lt;/form&gt;</code></pre>
+<h2 id="mail">mail</h2>
+<p>Permet d'envoyer un e-mail à une ou des adresses indiquées (sous forme de tableau).</p>
+<p>Restrictions :</p>
+<ul>
+<li>le message est toujours envoyé en format texte ;</li>
+<li>l'expéditeur est toujours l'adresse de l'association ;</li>
+<li>l'envoi est limité à une seule adresse e-mail externe (adresse qui n'est pas celle d'un membre) dans une page ;</li>
+<li>l'envoi est limité à maximum 10 adresses e-mails internes (adresses de membres) dans une page ;</li>
+<li>un message envoyé à une adresse e-mail externe ne peut pas contenir une adresse web (<code>https://...</code>) autre que celle de l'association.</li>
+</ul>
+<p>Note : il est également conseillé d'utiliser la fonction <code>captcha</code> pour empêcher l'envoi de spam.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>to</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Adresse email destinataire (seule l'adresse e-mail elle-même est acceptée, pas de nom)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>subject</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Sujet du message</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>body</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Corps du message</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>block_urls</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">(<code>true</code> ou <code>false</code>) Permet de bloquer l'envoi si le message contient une adresse <code>https://…</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>attach_file</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Chemin vers un ou plusieurs documents à joindre au message (situé dans les documents)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>attach_from</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Chemin vers un ou plusieurs squelettes à joindre au message (par exemple pour joindre un document généré)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>notification</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Indique que le message est une notification, et non pas un message personnel ou collectif.</td>
+</tr>
+</tbody>
+</table>
+<p>Pour le destinataire, il est possible de spécifier un tableau :</p>
+<pre><code>{{:assign var="recipients[]" value="membre1@framasoft.net"}}
+{{:assign var="recipients[]" value="membre2@chatons.org"}}
+{{:mail to=$recipients subject="Coucou" body="Contenu du message\nNouvelle ligne"}}</code></pre>
+<p>Exemple de formulaire de contact :</p>
+<pre><code>{{if !$_POST.email|check_email}}
+  &lt;p class="alert"&gt;L'adresse e-mail indiquée est invalide.&lt;/p&gt;
+{{elseif $_POST.message|trim == ''}}
+  &lt;p class="alert"&gt;Le message est vide&lt;/p&gt;
+{{elseif $_POST.send}}
+  {{:captcha verify=true}}
+  {{:mail to=$config.org_email subject="Formulaire de contact" body="%s a écrit :\n\n%s"|args:$_POST.email:$_POST.message block_urls=true}}
+  &lt;p class="ok"&gt;Votre message nous a bien été transmis !&lt;/p&gt;
+{{/if}}
+
+&lt;form method="post" action=""&gt;
+&lt;dl&gt;
+  &lt;dt&gt;&lt;label&gt;Votre e-mail : &lt;input type="email" required name="email" /&gt;&lt;/label&gt;&lt;/dt&gt;
+  &lt;dt&gt;&lt;label&gt;Votre message : &lt;textarea required name="message" cols="50" rows="5"&gt;&lt;/textarea&gt;&lt;/label&gt;&lt;/dt&gt;
+  &lt;dt&gt;{{:captcha html=true}}&lt;/dt&gt;
+&lt;/dl&gt;
+&lt;p&gt;&lt;input type="submit" name="send" value="Envoyer !" /&gt;&lt;/p&gt;
+&lt;/form&gt;</code></pre>
+<h2 id="redirect">redirect</h2>
+<p>Redirige vers une nouvelle page immédiatement.</p>
+<p>Le code situé après cette fonction ne sera pas exécuté. Il est donc important, dans un bloc <code>#form</code> de placer cette instruction à la fin, après l'enregistrement (<code>:save</code>).</p>
+<h3 id="fonctionnement-simple">Fonctionnement simple</h3>
+<p>Pour simplement rediriger vers une adresse HTTPS interne ou externe. Utile par exemple pour rediriger une page du site vers une autre adresse.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>url</code></td>
+<td style="text-align: left;">obligatoire</td>
+<td style="text-align: left;">Adresse vers laquelle rediriger</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>permanent</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">(booléen) Indiquer <code>TRUE</code> à ce paramètre pour indiquer une redirection permanente (code HTTP 301).</td>
+</tr>
+</tbody>
+</table>
+<pre><code>{{:redirect url="https://kd2.org/" permanent=true}}</code></pre>
+<h3 id="fonctionnement-avance-fenetre-modale">Fonctionnement avancé (fenêtre modale)</h3>
+<p>Dans l'administration de Paheko, une page peut être ouverte dans une <code>iframe</code> (fenêtre modale), appelée <strong>dialogue</strong>. Pour cela on utilise <code>target="_dialog"</code> sur le lien ou le formulaire, pour que la page s'ouvre dans cette fenêtre modale.</p>
+<p>Si le code exécuté se situe dans une fenêtre modale, les paramètres suivants peuvent être utilisés à la place du paramètre <code>url</code> :</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>self</code></td>
+<td style="text-align: left;">Redirige à l'intérieur de la fenêtre modale.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>parent</code></td>
+<td style="text-align: left;">Ferme la fenêtre modale et redirige la fenêtre parente vers l'adresse indiquée.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>reload</code></td>
+<td style="text-align: left;">Ferme la fenêtre modale, et recharge la page parente.</td>
+</tr>
+</tbody>
+</table>
+<p>Cette fonction permet une dégradation progressive : si la page a été ouverte en dehors d'une fenêtre modale (par exemple si l'utilisateur a ouvert le lien dans un nouvel onglet, via un clic droit), alors ces paramètres ne font aucune différence : la page est redirigée vers l'adresse indiquée dans le paramètre.</p>
+<p>Si aucun paramètre n'est fourni, cela revient au même que de faire <code>{{:redirect reload=null}}</code>.</p>
+<p>Il est important de passer quand même une adresse au paramètre <code>reload</code>, car si Javascript n'est pas disponible, il faut que l'utilisateur soit bien redirigé vers la page voulue :</p>
+<pre><code>{{:redirect reload="./details.html?id=%d"|args:$doc.id}}</code></pre>
+<p>Dans cet exemple, la page sera redirigée </p>
+<p>Il est possible d'utiliser un point d'exclamation au début de l'URL (<code>!</code>) pour indiquer une adresse se situant dans l'administration :</p>
+<pre><code>{{:redirect parent="!users/"}}</code></pre>
+<h2 id="api">api</h2>
+<p>Permet d'appeler l'API de Paheko, que ça soit sur l'instance locale, en cours, ou une autre instance externe.</p>
+<p>Voir la <a href="https://paheko.cloud/api" rel="noreferrer noopener external" target="_blank">documentation de l'API</a> pour la liste des fonctions disponibles.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>method</code></td>
+<td style="text-align: left;">obligatoire</td>
+<td style="text-align: left;">Méthode de requête : <code>GET</code> ou <code>POST</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>path</code></td>
+<td style="text-align: left;">obligatoire</td>
+<td style="text-align: left;">Chemin de la méthode de l'API à appeler.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>fail</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Booléen. Si <code>true</code>, alors une erreur sera affichée si la requête échoue. Si <code>false</code>, aucune erreur ne sera affichée. Défaut : <code>true</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>assign</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Capturer le résultat dans cette variable.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>assign_code</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Capturer le code de retour dans cette variable.</td>
+</tr>
+</tbody>
+</table>
+<p>Note : les requêtes de type <code>PUT</code> ou <code>POST</code> qui nécessitent l'envoi d'un fichier (<code>import</code>) ne sont pas fonctionnelles pour le moment.</p>
+<p>Par défaut, les requêtes sont réalisées sur la base de données locale, dans ce cas les paramètres suivants sont également disponibles :</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>access</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Niveau d'autorisation de l'API (défaut : <code>admin</code>).</td>
+</tr>
+</tbody>
+</table>
+<pre><code>{{:assign var="users." value=42}}
+{{:api
+  method="POST"
+  path="accounting/transaction"
+  assign="result"
+
+  id_year=1
+  type="revenue"
+  date="01/01/2023"
+  label="Don de Ada Lovelace"
+  reference="DON-0001"
+  payment_reference="Credit Mutuel 00042"
+  amount="51,49"
+  debit="756"
+  credit="512A"
+  linked_users=$users
+}}
+
+L'écriture n°{{$result.id}} a été créée.</code></pre>
+<p>Mais cette fonction permet également d'appeler une API Paheko distante, dans ce cas les paramètres suivants sont nécessaires :</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>url</code></td>
+<td style="text-align: left;">obligatoire</td>
+<td style="text-align: left;">Adresse HTTP de l'instance Paheko distante.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>user</code></td>
+<td style="text-align: left;">obligatoire</td>
+<td style="text-align: left;">Identifiant d'accès à l'API distante.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>password</code></td>
+<td style="text-align: left;">obligatoire</td>
+<td style="text-align: left;">Mot de passe d'accès à l'API distante.</td>
+</tr>
+</tbody>
+</table>
+<pre><code>{{:api
+  method="POST"
+  path="sql"
+  sql="SELECT * FROM users;"
+  url="https://mon-asso.paheko.cloud/"
+  user="zmgyfr1qnm"
+  password="OAqFTLFzujJWr6lLn1Mu7w"
+  assign="result"
+  assign_code="code"
+  fail=false
+}}
+
+{{if $code == 200}}
+  Il y a {{$result.count}} résultats.
+{{else}}
+  La requête a échoué : code {{$code}} — {{$result.error}}
+{{/if}}
+</code></pre>
+<h2 id="csv">csv</h2>
+<p>Permet de demander à l'utilisateur de charger un fichier CSV (ou XLSX/ODS, selon la configuration de Paheko), et ensuite d'associer les colonnes pour permettre d'utiliser ces données dans une boucle.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">action</td>
+<td style="text-align: left;">obligatoire</td>
+<td style="text-align: left;">Action à réaliser : <code>initialize</code>, <code>form</code>, <code>cancel_button</code>, <code>clear</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">name</td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Définit le nom du fichier, utile s'il y a plusieurs fichiers CSV dans le même module.</td>
+</tr>
+<tr>
+<td style="text-align: left;">assign</td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Assigner le tableau indiquant les informations du fichier CSV à la variable donnée en valeur.</td>
+</tr>
+<tr>
+<td style="text-align: left;">file</td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Si ce paramètre est renseigné, le fichier correspondant sera chargé depuis les documents, sinon un formulaire d'upload sera proposé.</td>
+</tr>
+</tbody>
+</table>
+<p>Paramètres pour l'action <code>initialize</code> :</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">columns</td>
+<td style="text-align: left;">obligatoire</td>
+<td style="text-align: left;">Tableau des colonnes qui pourront être utilisées, sous la forme clé =&gt; valeur.</td>
+</tr>
+<tr>
+<td style="text-align: left;">mandatory_columns</td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Liste des clés de colonnes qui sont obligatoires.</td>
+</tr>
+</tbody>
+</table>
+<p>Cette fonction est très puissante mais un peu complexe.</p>
+<p>Il faut commencer par définir les colonnes que nous voudrons pouvoir utiliser, dans un tableau :</p>
+<pre><code>{{:assign var="columns"
+  date="Date"
+  name="Nom"
+  address="Adresse"
+}}</code></pre>
+<p>La valeur représente le libellé par défaut de la colonne dans le tableau. La clé représente elle la clé unique qu'on pourra ensuite utiliser dans les données (voir plus bas).</p>
+<p>On peut ensuite définir les colonnes que nous souhaitons rendre obligatoire (en utilisant la clé unique) :</p>
+<pre><code>{{:assign var="mandatory_columns." value="name"}}
+{{:assign var="mandatory_columns." value="date"}}</code></pre>
+<p>Si ces colonnes ne sont pas fournies dans le fichier importé, l'import ne pourra pas continuer.</p>
+<p>On commence ensuite la procédure de chargement du CSV :</p>
+<pre><code>{{:csv action="initialize" name="import_noms" columns=$columns mandatory_columns=$mandatory_columns assign="csv"}}</code></pre>
+<p>La variable <code>$csv</code> contiendra ensuite les informations sur le fichier CSV actuellement chargé. Le tableau de cette variable contiendra les clés suivantes :</p>
+<ul>
+<li><code>ready</code> (booléen) : vaut <code>true</code> quand le fichier est chargé et que l'utilisateur a fait correspondre les colonnes</li>
+<li><code>loaded</code> (booléen) : vaut <code>true</code> quand le fichier est chargé</li>
+<li><code>columns</code> (tableau) : les colonnes, définies dans l'appel avec l'action <code>initialize</code></li>
+<li><code>mandatory_columns</code> (tableau) : les colonnes requises, définies dans l'appel avec l'action <code>initialize</code></li>
+<li><code>file_name</code> (texte) : le nom du fichier uploadé</li>
+</ul>
+<p>Les clés suivantes ne sont renseignées que quand <code>ready</code> vaut <code>true</code> :</p>
+<ul>
+<li><code>translation_table</code> (tableau) : le tableau associatif entre le numéro de colonne du fichier CSV (clé) et le nom des colonnes définies (valeur)</li>
+<li><code>header</code> (tableau) : la première ligne du fichier CSV chargé</li>
+<li><code>rows</code> (tableau) : les lignes du fichier CSV</li>
+<li><code>count</code> (entier) : le nombre de lignes du fichier CSV chargé</li>
+<li><code>skip</code> (entier) : le nombre de lignes à ignorer (généralement <code>1</code>, car la première ligne contient les entêtes des colonnes)</li>
+</ul>
+<p>À ce stade, rien n'est affiché. Il faut commencer par afficher le formulaire de chargement et de choix des colonnes si le fichier n'est pas encore chargé :</p>
+<pre><code>{{if !$csv.ready}}
+
+  {{:csv action="form"}}
+
+{{/if}}</code></pre>
+<p>Cet appel génère le formulaire complet HTML (<code>&lt;form&gt;…&lt;/form&gt;</code>), il n'y a rien besoin d'ajouter. Il gère à la fois le formulaire de sélection du fichier CSV, et le formulaire permettant d'associer les colonnes du CSV aux colonnes demandées.</p>
+<p>Pour exploiter ensuite les données du CSV il faut d'abord vérifier qu'il est prêt à être utilisé, avec la variable <code>$csv.ready</code> :</p>
+<pre><code>{{if $csv.ready}}
+
+  {{#foreach from=$csv.rows item="row"}}
+    Nom : {{$row.name}}&lt;br /&gt;
+    Adresse : {{$row.address}}&lt;br /&gt;
+  {{/foreach}}
+
+{{/if}}</code></pre>
+<p>Il est conseillé d'ajouter dans la page du résultat un bouton pour annuler la procédure. Dans ce cas le CSV chargé sur le serveur sera supprimé :</p>
+<pre><code>&lt;form method="post" action=""&gt;
+  &lt;p&gt;{{:csv action="cancel_button"}}&lt;/p&gt;
+&lt;/form&gt;</code></pre>
+<p>Quand on a terminé avec le CSV, de la même manière il faut faire appel à l'action <code>clear</code>.</p>
+<p>Note : il est possible de combiner l'usage de la fonction <code>csv</code> avec le paramètre <code>from</code> de <code>save</code> pour enregistrer en une fois toutes les lignes :</p>
+<pre><code>{{if $csv.ready}}
+  {{:save type="entry" from=$csv.rows validate_schema="./entry.schema.json"}}
+  {{:csv action="clear"}}
+  {{:redirect to="./"}}
+{{/if}}</code></pre>
+<h3 id="chargement-d-un-fichier-local">Chargement d'un fichier local</h3>
+<p>Si le paramètre <code>file</code> n'est pas spécifié, un formulaire d'envoi de fichier sera affiché. S'il est renseigné avec le chemin vers un fichier stocké dans Paheko, c'est ce fichier qui sera chargé en mémoire lors de l'exécution de l'action <code>initialize</code>. Exemple :</p>
+<pre><code>{{:csv action="initialize" file="documents/test.ods" columns=$columns assign="csv"}}
+
+{{if !$csv.ready}}
+  {{:csv action="form"}}
+{{else}}
+  {{:debug csv=$csv}}
+{{/if}}</code></pre>
+<p>Comme le fichier est chargé en mémoire lors de la première exécution de l'action <code>initialize</code>, si le fichier est modifié après cette première exécution, les modifications ne seront pas visibles. Il faut donc exécuter <code>{{:csv action="clear"}}</code> pour pouvoir "recharger" le fichier en mémoire à partir des documents.</p>
+<h2 id="signature"> signature</h2>
+<p>Affiche la signature de l'association (en HTML), ou son logo si aucune signature n'a été choisie.</p>
+<h1 id="fonctions-relatives-aux-modules">Fonctions relatives aux Modules</h1>
+<h2 id="save">save</h2>
+<p>Enregistre des données, sous la forme d'un document, dans la base de données, pour le module courant.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>key</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Clé unique du document</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>id</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Numéro unique du document</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>validate_schema</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Fichier de schéma JSON à utiliser pour valider les données avant enregistrement</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>validate_only</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Liste des paramètres à valider (par exemple pour ne faire qu'une mise à jour partielle), séparés par des virgules.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>assign_new_id</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Si renseigné, le nouveau numéro unique du document sera indiqué dans cette variable.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>from</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Si renseigné avec un tableau, chaque entrée du tableau sera traitée comme un élément à enregistrer.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>replace</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">(Booléen) Si ce paramètre vaut <code>true</code>, alors le contenu du document sera écrasé, au lieu d'être fusionné.</td>
+</tr>
+<tr>
+<td style="text-align: left;">…</td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Autres paramètres : traités comme des valeurs à enregistrer dans le document</td>
+</tr>
+</tbody>
+</table>
+<p>Si ni <code>key</code> ni <code>id</code> ne sont indiqués, un nouveau document sera créé avec un nouveau numéro (ID) unique.</p>
+<h3 id="mise-a-jour">Mise à jour</h3>
+<p>Si le document indiqué existe déjà, il sera mis à jour. Les valeurs nulles (<code>NULL</code>) seront effacées.</p>
+<pre><code>{{:save key="facture_43" nom="Atelier mobile" montant=250}}</code></pre>
+<p>Enregistrera dans la base de données le document suivant sous la clé <code>facture_43</code> :</p>
+<pre><code>{"nom": "Atelier mobile", "montant": 250}</code></pre>
+<p>Exemple de mise à jour :</p>
+<pre><code>{{:save key="facture_43" montant=300}}</code></pre>
+<p>Seul le montant sera modifié, le nom ne sera pas modifié.</p>
+<p>Par contre en utilisant le paramètre <code>replace</code>, le document sera écrasé :</p>
+<pre><code>{{:save key="facture_43" replace=true nom="Vente de vélo"}}</code></pre>
+<p>Donnera :</p>
+<pre><code>{"nom": "Vente de vélo"}</code></pre>
+<p>Le montant est donc supprimé.</p>
+<h3 id="recuperer-l-identifiant-du-document-ajoute">Récupérer l'identifiant du document ajouté</h3>
+<p>Exemple de récupération du nouvel ID :</p>
+<pre><code>{{:save titre="Coucou !" assign_new_id="id"}}
+Le document n°{{$id}} a bien été enregistré.</code></pre>
+<h3 id="enregistrer-plusieurs-documents-en-une-fois">Enregistrer plusieurs documents en une fois</h3>
+<p>Le paramètre <code>from</code> est équivalent à appeler la fonction <code>save</code> dans une boucle. Ainsi au lieu de :</p>
+<pre><code>{{:assign var="documents." title="Titre 1"}}
+{{:assign var="documents." title="Titre 2"}}
+{{#foreach from=$documents item="doc"}}
+  {{:save title=$doc.title validate_schema="./document.schema.json"}}
+{{/foreach}}</code></pre>
+<p>On peut simplement utiliser :</p>
+<pre><code>{{:assign var="documents." title="Titre 1"}}
+{{:assign var="documents." title="Titre 2"}}
+{{:save from=$documents validate_schema="./document.schema.json"}}</code></pre>
+<h3 id="validation-avec-un-schema-json">Validation avec un schéma JSON</h3>
+<pre><code>{{:save titre="Coucou" texte="Très long" validate_schema="./document.schema.json"}}</code></pre>
+<p>Pour ne valider qu'une partie du schéma, par exemple si on veut faire une mise à jour du document :</p>
+<pre><code>{{:save key="test" titre="Coucou" validate_schema="./document.schema.json" validate_only="titre"}}</code></pre>
+<h2 id="delete">delete</h2>
+<p>Supprime un document lié au module courant.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>key</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Clé unique du document</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>id</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Numéro unique du document</td>
+</tr>
+</tbody>
+</table>
+<p>Il est possible de spécifier d'autres paramètres, ou une clause <code>where</code> et des paramètres dont le nom commence par deux points.</p>
+<ul>
+<li>Supprimer le document avec la clé <code>facture_43</code> : <code>{{:delete key="facture_43"}}</code></li>
+<li>Supprimer le document avec la clé <code>ABCD</code> et dont la propriété <code>type</code> du document correspond à la valeur <code>facture</code> : <code>{{:delete key="ABCD" type="facture"}}</code></li>
+<li>Supprimer tous les documents : <code>{{:delete}}</code></li>
+<li>Supprimer tous les documents ayant le type <code>facture</code> : <code>{{:delete type="facture"}}</code></li>
+<li>Supprimer tous les documents de type <code>devis</code> ayant une date dans le passé : <code>{{:delete :type="devis" where="$$.type = :type AND $$.date &lt; datetime()"}}</code></li>
+</ul>
+<h2 id="read">read</h2>
+<p>Lire un fichier stocké dans les fichiers du code du module.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>file</code></td>
+<td style="text-align: left;">obligatoire</td>
+<td style="text-align: left;">Chemin du fichier à lire</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>assign</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Variable dans laquelle placer le contenu du fichier.</td>
+</tr>
+</tbody>
+</table>
+<p>Si le paramètre <code>assign</code> n'est pas utilisé, le contenu du fichier sera affiché directement.</p>
+<p>Exemple pour lire un fichier JSON :</p>
+<pre><code>{{:read file="baremes.json" assign="baremes"}}
+{{:assign baremes=$baremes|json_decode}}
+Barème kilométrique pour une voiture de 3 CV : {{$baremes.voiture.3cv}}</code></pre>
+<p>Exemple pour lire un fichier CSV :</p>
+<pre><code>{{:read file="baremes.csv" assign="baremes"}}
+{{:assign baremes=$baremes|trim|explode:"\n"}}
+
+{{#foreach from=$baremes item="line"}}
+  {{:assign bareme=$line|str_getcsv}}
+  Nom du barème : {{$bareme.0}}
+  Calcul : {{$bareme.1}}
+{{/foreach}}</code></pre>
+<h2 id="admin_header">admin_header</h2>
+<p>Affiche l'entête de l'administration de l'association.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>title</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Titre de la page</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>layout</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Aspect de la page. Peut être <code>public</code> pour une page publique simple (sans le menu), ou <code>raw</code> pour une page vierge (sans aucun menu ni autre élément). Défaut : vide (affichage du menu)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>current</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Indique quel élément dans le menu de gauche doit être marqué comme sélectionné</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>custom_css</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Fichier CSS supplémentaire à appeler dans le <code>&lt;head&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<pre><code>{{:admin_header title="Gestion des dons" current="acc"}}</code></pre>
+<p>Liste des choix possibles pour <code>current</code> :</p>
+<ul>
+<li><code>home</code> : menu Accueil</li>
+<li><code>users</code> : menu Membres</li>
+<li><code>users/new</code> : sous-menu "Ajouter" de Membres</li>
+<li><code>users/services</code> : sous-menu "Activités et cotisations" de Membres</li>
+<li><code>users/mailing</code> : sous-menu "Message collectif" de Membres</li>
+<li><code>acc</code> : menu Comptabilité</li>
+<li><code>acc/new</code> : sous-menu "Saisie" de Comptabilité</li>
+<li><code>acc/accounts</code> : sous-menu "Comptes"</li>
+<li><code>acc/simple</code> : sous-menu "Suivi des écritures"</li>
+<li><code>acc/years</code> : sous-menu "Exercices et rapports"</li>
+<li><code>docs</code> : menu Documents</li>
+<li><code>web</code> : menu Site web</li>
+<li><code>config</code> : menu Configuration</li>
+<li><code>me</code> : menu "Mes infos personnelles"</li>
+<li><code>me/services</code> : sous-menu "Mes activités et cotisations"</li>
+</ul>
+<p>Exemple d'utilisation de <code>custom_css</code> depuis un module :</p>
+<pre><code>{{:admin_header title="Mon module" custom_css="./style.css"}}</code></pre>
+<h2 id="admin_footer">admin_footer</h2>
+<p>Affiche le pied de page de l'administration de l'association.</p>
+<pre><code>{{:admin_footer}}</code></pre>
+<h2 id="delete_form">delete_form</h2>
+<p>Affiche un formulaire demandant la confirmation de suppression d'un élément.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>legend</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Libellé de l'élément <code>&lt;legend&gt;</code> du formulaire</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>warning</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Libellé de la question de suppression (en gros en rouge)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>alert</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Message d'alerte supplémentaire (bloc jaune)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>info</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Informations liées à la suppression (expliquant ce qui va être impacté par la suppression)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>confirm</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Libellé de la case à cocher pour la suppression, si ce paramètre est absent ou <code>NULL</code>, la case à cocher ne sera pas affichée.</td>
+</tr>
+</tbody>
+</table>
+<p>Le formulaire envoie un <code>POST</code> avec le bouton ayant le nom <code>delete</code>. Si le paramètre <code>confirm</code> est renseigné, alors la case à cochée aura le nom <code>confirm_delete</code>.</p>
+<p>Exemple :</p>
+<pre><code>{{#load id=$_GET.id assign="invoice"}}
+{{else}}
+  {{:error message="Facture introuvable"}}
+{{/load}}
+
+{{#form on="delete"}}
+  {{if !$_POST.confirm_delete}}
+    {{:error message="Merci de cocher la case"}}
+  {{/if}}
+  {{:delete id=$invoice.id}}
+{{/form}}
+
+{{:form_errors}}
+
+{{:delete_form
+  legend="Suppression d'une facture"
+  warning="Supprimer la facture n°%d ?"|args:$invoice.id
+  info="Le devis lié sera également supprimé"
+  alert="La facture sera définitivement perdue !"
+  confirm="Cocher cette case pour confirmer la suppression de la facture"
+}}</code></pre>
+<h2 id="dropdown">dropdown</h2>
+<p>Crée un champ qui ressemble à un <code>&lt;select&gt;</code> en HTML, mais permet une formattage plus avancé, et est utilisé pour de la navigation.</p>
+<p>Ce n'est pas un champ de formulaire, aucune valeur n'est retournée s'il est utilisé dans un formulaire.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>options</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Tableau des options</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>title</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Libellé</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>value</code></td>
+<td style="text-align: left;">facultatif</td>
+<td style="text-align: left;">Valeur de l'option actuellement sélectionnée</td>
+</tr>
+</tbody>
+</table>
+<p>Chaque option peut contenir les clés suivantes :</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>value</code></td>
+<td style="text-align: left;">Valeur de l'élément</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>html</code></td>
+<td style="text-align: left;">Contenu HTML de l'élément</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>label</code></td>
+<td style="text-align: left;">Libellé de l'élément (utilisé si <code>html</code> n'est pas renseigné)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>aside</code></td>
+<td style="text-align: left;">Élément à afficher en petit, à droite du libellé.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>href</code></td>
+<td style="text-align: left;">Si renseigné, le contenu sera dans un lien pointant vers cette adresse.</td>
+</tr>
+</tbody>
+</table>
+<p>Exemple :</p>
+<pre><code>{{:assign var="options." value="42" label="Membres cachés" aside="525 membres" href="?cat=42"}}
+{{:assign var="options." value="43" label="Tous les membres" aside="1234 membres" href="?cat=43"}}
+{{:dropdown value=42 options=$options title="Choisir une catégorie de membres"}}</code></pre>
+<h2 id="input">input</h2>
+<p>Crée un champ de formulaire HTML. Cette fonction est une extension à la balise <code>&lt;input&gt;</code> en HTML, mais permet plus de choses.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>name</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Nom du champ</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>type</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Type de champ</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>required</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Mettre à <code>true</code> si le champ est obligatoire</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>label</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Libellé du champ</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>help</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Texte d'aide, affiché sous le champ</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>default</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Valeur du champ par défaut, si le formulaire n'a pas été envoyé, et que la valeur dans <code>source</code> est vide</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>source</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Source de pré-remplissage du champ. Si le nom du champ est <code>montant</code>, alors la valeur de <code>[source].montant</code> sera affichée si présente.</td>
+</tr>
+</tbody>
+</table>
+<p>Si <code>label</code> ou <code>help</code> sont spécifiés, le champ sera intégré à une balise HTML <code>&lt;dd&gt;</code>, et le libellé sera intégré à une balise <code>&lt;dt&gt;</code>. Dans ce cas il faut donc que le champ soit dans une liste <code>&lt;dl&gt;</code>. Si ces deux paramètres ne sont pas spécifiés, le champ sera le seul tag HTML.</p>
+<pre><code>&lt;dl&gt;
+    {{:input name="amount" type="money" label="Montant" required=true}}
+&lt;/dl&gt;</code></pre>
+<p>Note : le champ aura comme <code>id</code> la valeur <code>f_[name]</code>. Ainsi un champ avec <code>amount</code> comme <code>name</code> aura <code>id="f_amount"</code>.</p>
+<h3 id="valeur-du-champ">Valeur du champ</h3>
+<p>La valeur du champ est remplie avec :</p>
+<ul>
+<li>la valeur dans <code>$_POST</code> qui correspond au <code>name</code> ;</li>
+<li>sinon la valeur dans <code>source</code> (tableau) avec le même nom (exemple : <code>$source[name]</code>) ;</li>
+<li>sinon la valeur de <code>default</code> est utilisée.</li>
+</ul>
+<p>Note : le paramètre <code>value</code> n'est pas supporté sauf pour checkbox et radio.</p>
+<h3 id="types-de-champs-supportes">Types de champs supportés</h3>
+<ul>
+<li>les types classiques de <code>input</code> en HTML : text, search, email, url, file, date, checkbox, radio, password, etc.<ul>
+<li>Note : pour checkbox et radio, il faut utiliser le paramètre <code>value</code> en plus pour spécifier la valeur.</li>
+</ul>
+</li>
+<li><code>textarea</code></li>
+<li><code>money</code> créera un champ qui attend une valeur de monnaie au format décimal</li>
+<li><code>datetime</code> créera un champ date et un champ texte pour entrer l'heure au format <code>HH:MM</code></li>
+<li><code>radio-btn</code> créera un champ de type radio mais sous la forme d'un gros bouton</li>
+<li><code>select</code> crée un sélecteur de type <code>&lt;select&gt;</code>. Dans ce cas il convient d'indiquer un tableau associatif dans le paramètre <code>options</code>.</li>
+<li><code>select_groups</code> crée un sélecteur de type <code>&lt;select&gt;</code>, mais avec des <code>&lt;optgroup&gt;</code>. Dans ce cas il convient d'indiquer un tableau associatif à deux niveaux dans le paramètre <code>options</code>.</li>
+<li><code>list</code> crée un champ permettant de sélectionner un ou des éléments (selon si le paramètre <code>multiple</code> est <code>true</code> ou <code>false</code>) dans un formulaire externe. Le paramètre <code>can_delete</code> indique si l'utilisateur peut supprimer l'élément déjà sélectionné (si <code>multiple=false</code>). La sélection se fait à partir d'un  formulaire  dont l'URL doit être spécifiée dans le paramètre <code>target</code>. Les formulaires actuellement supportés sont :<ul>
+<li><code>!acc/charts/accounts/selector.php?types=X</code> pour sélectionner un compte du plan comptable, où X est une liste de types de comptes qu'il faut permettre de choisir (séparés par des <code>|</code>)</li>
+<li><code>!acc/charts/accounts/selector.php?codes=X</code> pour sélectionner un compte du plan comptable, où X est une liste de codes de comptes qu'il faut permettre de choisir (séparés par des <code>|</code>). Il est possible d'utiliser une astérisque pour inclure les sous-comptes : <code>codes=512*|580*</code></li>
+<li><code>!users/selector.php</code> pour sélectionner un membre</li>
+</ul>
+</li>
+</ul>
+<p>Note : pour les champs de type <code>select</code> et <code>select_groups</code> il est possible de spécifier le paramètre <code>default_empty</code> pour la valeur vide par défaut du champ. <code>default_empty="Tous"</code> affichera ainsi la valeur <code>Tous</code> en première option du select. Si cette option est sélectionnée une chaîne vide sera envoyée.</p>
+<h2 id="button">button</h2>
+<p>Affiche un bouton, similaire à <code>&lt;button&gt;</code> en HTML, mais permet d'ajouter une icône par exemple.</p>
+<pre><code>{{:button type="submit" name="save" label="Créer ce membre" shape="plus" class="main"}}</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>type</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Type du bouton</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>name</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Nom du bouton</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>label</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Label du bouton</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>shape</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Affiche une icône en préfixe du label</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>class</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Classe CSS</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>title</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Attribut HTML <code>title</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>disabled</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Désactive le bouton si <code>true</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="link">link</h2>
+<p>Affiche un lien.</p>
+<pre><code>{{:link href="!users/new.php" label="Créer un nouveau membre"}}</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>href</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Adresse du lien</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>label</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Libellé du lien</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>target</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Cible du lien, utiliser <code>_dialog</code> pour que le lien s'ouvre dans une fenêtre modale.</td>
+</tr>
+</tbody>
+</table>
+<p>Préfixer l'adresse par "!" donnera une URL absolue en préfixant l'adresse par l'URL de l'administration.<br />
+Sans "!", l'adresse générée sera relative au contexte d'appel (module/plugin ou squelette site web).</p>
+<h2 id="linkbutton">linkbutton</h2>
+<p>Affiche un lien sous forme de faux bouton, avec une icône si le paramètre <code>shape</code> est spécifié.</p>
+<pre><code>{{:linkbutton href="!users/new.php" label="Créer un nouveau membre" shape="plus"}}</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>href</code></td>
+<td style="text-align: left;">*<em>obligatoire</em></td>
+<td style="text-align: left;">Adresse du lien</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>label</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Libellé du bouton</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>target</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Cible de l'ouverture du lien</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>shape</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Affiche une icône en préfixe du label</td>
+</tr>
+</tbody>
+</table>
+<p>Si on utilise <code>target="_dialog"</code> alors le lien s'ouvrira dans une fenêtre modale (iframe) par dessus la page actuelle.</p>
+<p>Si on utilise <code>target="_blank"</code> alors le lien s'ouvrira dans un nouvel onglet.</p>
+<h2 id="icon">icon</h2>
+<p>Affiche une icône.</p>
+<pre><code>{{:icon shape="print"}}</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>shape</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Forme de l'icône.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="formes-d-icones-disponibles">Formes d'icônes disponibles</h3>
+<p><img src="shapes.png" alt="" /></p>
+<h2 id="user_field">user_field</h2>
+<p>Affiche un champ de la fiche membre.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>name</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Nom du champ.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>value</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Valeur du champ.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="edit_user_field">edit_user_field</h2>
+<p>Afficher un champ de formulaire pour modifier un champ de la fiche membre.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>name</code></td>
+<td style="text-align: left;"><strong>obligatoire</strong></td>
+<td style="text-align: left;">Nom du champ.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>source</code></td>
+<td style="text-align: left;"><em>optionnel</em></td>
+<td style="text-align: left;">Source de pré-remplissage du champ. Si le nom du champ est <code>montant</code>, alors la valeur de <code>[source].montant</code> sera utilisée comme valeur du champ.</td>
+</tr>
+</tbody>
+</table>
+<h1 id="gestion-de-fichiers-dans-les-modules">Gestion de fichiers dans les modules</h1>
+<p>Les modules peuvent stocker des fichiers, mais seulement dans leur propre contexte. Un module ne peut pas gérer les fichiers du site web, des écritures comptables, des membres, ou des autres modules, il ne peut gérer que ses propres fichiers.</p>
+<p>Quand les données d'un module sont supprimé, les fichiers du module sont aussi supprimés.</p>
+<p>Mais si le module stocke des fichiers liés à un document JSON (par exemple dans un sous-répertoire pour chaque module), c'est au code du module de s'assurer que les fichiers seront supprimés lors de la suppression du document.</p>
+<p>Par défaut, tous les fichiers des modules sont en accès restreint : ils ne peuvent être vus et modifiés que par les membres connectés qui sont au niveau d'accès indiqué dans les paramètres <code>restrict_section</code> et <code>restrict_level</code> du fichier <code>module.ini</code>.</p>
+<p>Pour qu'un fichier soit visible publiquement aux personnes non connectées, il faut le placer dans le sous-répertoire <code>public</code> du module.</p>
+<p>Attention : de par ce fonctionnement, <strong>tous les fichiers</strong> d'un module sont potentiellement accessibles par <strong>tous les membres ayant accès au module</strong> et connaissant le nom du fichier.</p>
+<p>Il est donc recommandé de ne pas utiliser ce mécanisme pour stocker des données personnelles ou des données sensibles.</p>
+<h2 id="admin_files">admin_files</h2>
+<p>Affiche (dans le contexte de l'administration) la liste des fichiers dans un sous-répertoire, et éventuellement la possibilité d'en ajouter ou de les supprimer.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>path</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Chemin du sous-répertoire où sont stockés les fichiers</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>upload</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Booléen. Si <code>true</code>, l'utilisateur pourra ajouter des fichiers. (Défaut : <code>false</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>edit</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Booléen. Si <code>true</code>, l'utilisateur pourra modifier ou supprimer les fichiers existants. (Défaut : <code>false</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_trash</code></td>
+<td style="text-align: left;">optionnel</td>
+<td style="text-align: left;">Booléen. Si <code>false</code>, le fichier sera supprimé, sans passer par la corbeille. Défaut : <code>true</code></td>
+</tr>
+</tbody>
+</table>
+<p>Exemple pour afficher la liste des fichiers du sous-répertoire <code>facture43</code> et permettre de rajouter de nouveaux fichiers :</p>
+<pre><code>{{:admin_files path="facture43" upload=true edit=false}}</code></pre>
+<h2 id="delete_file">delete_file</h2>
+<p>Supprimer un fichier ou un répertoire lié au module courant.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Paramètre</th>
+<th style="text-align: left;">Obligatoire ou optionnel ?</th>
+<th style="text-align: left;">Fonction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>path</code></td>
+<td style="text-align: left;">obligatoire</td>
+<td style="text-align: left;">Chemin du fichier ou répertoire</td>
+</tr>
+</tbody>
+</table>
+<p>Exemple pour supprimer un fichier seul :</p>
+<pre><code>{{:delete_file path="facture43/justificatif.pdf"}}</code></pre>
+<p>Pour supprimer un répertoire et tous les fichiers dedans :</p>
+<pre><code>{{:delete_file path="facture43"}}</code></pre></div></body></html>

@@ -1,0 +1,17 @@
+{{#restrict section="accounting" level="write" block=true}}{{/restrict}}
+
+{{#load assign="tpl" id=$_GET.id|intval}}
+{{else}}
+	{{:error message="Aucun modèle trouvé"}}
+{{/load}}
+
+{{#form on="delete"}}
+	{{:delete id=$tpl.id}}
+	{{:redirect to="./"}}
+{{/form}}
+
+{{:admin_header title="Supprimer modèle"}}
+
+{{:delete_form legend="Supprimer un modèle" warning="Supprimer le modèle '%s' ?"|args:$tpl.name}}
+
+{{:admin_footer}}

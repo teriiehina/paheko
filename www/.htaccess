@@ -1,0 +1,195 @@
+# Recommended Bots blocking
+<IfModule mod_setenvif.c>
+	# Abusive bots, see https://github.com/ai-robots-txt/ai.robots.txt/issues/69
+	BrowserMatchNoCase "(?:\b)LRX21T" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)MRA58N" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)OPD3\.170816\.012" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)CPU iPhone OS 11_0 like Mac OS X.*Chrome" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)Bytedance" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)Bytespider" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)Petalbot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)mj12bot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)ahrefsbot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)semrush" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)Barkrowler" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)MauiBot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)dotbot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)rogerbot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)paloaltonetworks\.com" paheko_bad_bot
+
+	# AI bots, see https://github.com/ai-robots-txt/ai.robots.txt/blob/main/table-of-bot-metrics.md
+	BrowserMatchNoCase "(?:\b)amazonbot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)chatgpt" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)gptbot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)OAI-" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)applebot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)AI2Bot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)CCBot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)claudebot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)Claude-Web" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)cohere-" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)meta-" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)googleother" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)google-extended" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)facebookbot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)FriendlyCrawler" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)iaskspider" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)ICC-Crawler" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)ImagesiftBot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)img2dataset" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)ISSCyberRiskCrawler" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)Kangaroo Bot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)OAI-SearchBot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)omgili" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)PanguBot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)PerplexityBot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)PetalBot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)Scrapy" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)Sidetrade" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)Timpibot" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)VelenPublicWebCrawler" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)Webzio-Extended" paheko_bad_bot
+	BrowserMatchNoCase "(?:\b)Youbot" paheko_bad_bot
+</IfModule>
+
+# Start of Paheko configuration
+Options -Indexes -Multiviews +FollowSymlinks
+
+DirectoryIndex index.php index.html
+
+# Some security
+<IfModule mod_alias.c>
+	RedirectMatch 404 _inc\.php
+</IfModule>
+
+# Recommended, if you have xsendfile module
+# see https://tn123.org/mod_xsendfile/
+# Also enable X-SendFile in config.local.php
+#
+#<IfModule mod_xsendfile.c>
+#	<Files *.php>
+#		XSendFile On
+#		XSendFilePath /home/paheko/
+#	</Files>
+#</IfModule>
+
+# This is to avoid caching mismatch when using mod_deflate
+# see https://github.com/symfony/symfony-docs/issues/12644
+<IfModule mod_deflate.c>
+	FileETag None
+</IfModule>
+
+# Allow uploads up to 256 MB where it's required
+<If "%{REQUEST_URI} =~ m!^/admin/(?:common/files|config/backup)/|^/(?:web)?dav/|^/remote\.php/(?:web)?dav/! && -n %{HTTP_COOKIE}">
+	<IfModule mod_php.c>
+		php_value post_max_size 256M
+		php_value upload_max_filesize 256M
+	</IfModule>
+
+	<IfModule mod_php7.c>
+		php_value post_max_size 256M
+		php_value upload_max_filesize 256M
+	</IfModule>
+
+	<IfModule !mod_php.c>
+		<IfModule !mod_php7.c>
+			SetEnv PHP_VALUE "post_max_size=256M"
+
+			# There is no way to pass multiple PHP ini settings via PHP_VALUE :-(
+			# so we use PHP_ADMIN_VALUE here. It works unless we have more than 2 settings to change.
+			SetEnv PHP_ADMIN_VALUE "upload_max_filesize=256M"
+		</IfModule>
+	</IfModule>
+</If>
+
+<IfModule mod_rewrite.c>
+	AddDefaultCharset utf-8
+	AddCharset utf-8 .html .css .js .txt
+
+	RewriteEngine On
+	RewriteBase /
+
+	# Block bots
+	RewriteCond %{ENV:paheko_bad_bot} 1
+	RewriteRule ^ - [R=429,END]
+
+	RewriteRule \.cache - [R=404]
+	RewriteRule \.well-known/assetlinks.json - [R=404]
+
+	# Stop rewrite for /admin URL, except for /admin/p/ (plugins)
+	RewriteCond %{REQUEST_URI} ^/?admin(?!/p/)
+	RewriteRule ^ - [END]
+
+	# Skip directly to router if possible
+	# Do not try cache if method is not GET or HEAD
+	RewriteCond %{REQUEST_METHOD} !GET|HEAD [OR]
+
+	# Do not try to get from cache if URL is private, or belongs to modules/plugins
+	RewriteCond %{REQUEST_URI} ^/admin|^/?(?:dav|wopi|p|m|api)/|\.php$ [OR]
+
+	# NextCloud routes
+	RewriteCond %{REQUEST_URI} ^/?(?:remote\.php|index\.php|ocs|avatars|status\.php)/ [OR]
+
+	# Private files are not part of the cache
+	RewriteCond %{REQUEST_URI} ^/?(?:documents|user|transaction|ext|attachments|versions)/
+
+	# Skip, go to router directly
+	RewriteRule ^ - [skip=8]
+
+	# Store MD5 hashes in environment variables
+	RewriteCond %{REQUEST_URI} ^(.+)(?:\?|$)
+	RewriteRule ^ "-" [E=CACHE_URI:%1]
+	# Extract file extension (required for Apache to serve the correct mimetype)
+	RewriteCond %{REQUEST_URI} (\.[a-z0-9]+)(?:\?|$)
+	RewriteRule ^ "-" [E=CACHE_EXT:%1]
+	# If no extension, default to .html
+	RewriteCond %{REQUEST_URI} !\.[a-z0-9]+(?:\?|$)
+	RewriteRule ^ "-" [E=CACHE_EXT:.html]
+	RewriteCond expr "md5(%{ENV:CACHE_URI}) =~ /^(.+)$/"
+	RewriteRule ^ "-" [E=CACHE_URI_MD5:%1]
+	RewriteCond expr "md5(tolower(%{HTTP_HOST})) =~ /^((.{2}).+)$/"
+	RewriteRule ^ "-" [E=CACHE_HOST_MD5:%1,E=CACHE_HOST2_MD5:%2]
+	RewriteCond /.cache/%{ENV:CACHE_HOST_MD5}/%{ENV:CACHE_URI_MD5} (.+)
+	RewriteRule ^ "-" [E=CACHE_PATH:%1]
+
+	# Serve symlinks for files
+	RewriteCond %{QUERY_STRING} ="" [OR]
+	RewriteCond %{QUERY_STRING} ^h=[a-f0-9]+$
+	RewriteCond %{DOCUMENT_ROOT}%{ENV:CACHE_PATH}%{ENV:CACHE_EXT} -l
+	RewriteRule ^ %{ENV:CACHE_PATH}%{ENV:CACHE_EXT} [END]
+
+	# Do not try cache for pages if user is logged-in
+	RewriteCond %{HTTP_COOKIE} !pko=
+	# Serve static HTML pages
+	RewriteCond %{QUERY_STRING} =""
+	RewriteCond %{DOCUMENT_ROOT}%{ENV:CACHE_PATH}%{ENV:CACHE_EXT} -f
+	RewriteCond %{DOCUMENT_ROOT}%{ENV:CACHE_PATH}%{ENV:CACHE_EXT} !-l
+	RewriteRule ^ %{ENV:CACHE_PATH}%{ENV:CACHE_EXT} [END]
+
+	# Redirect to router
+	RewriteRule ^ /_route.php [E=HTTP_AUTHORIZATION:%{HTTP:Authorization},END,QSA]
+</IfModule>
+<IfModule !mod_rewrite.c>
+	# FallbackResource has a bug before Apache 2.4.15, requiring to disable DirectoryIndex
+	# see https://bz.apache.org/bugzilla/show_bug.cgi?id=58292
+	# and https://serverfault.com/questions/559067/apache-hangs-for-five-seconds-with-fallbackresource-when-accessing
+	DirectoryIndex disabled
+	DirectoryIndex index.php
+
+	# Redirect non-existing URLs to the router
+	FallbackResource /_route.php
+
+	# FallbackResource does not work for URLs ending with ".php"
+	# see https://stackoverflow.com/a/66136226
+	ErrorDocument 404 /_route.php
+
+	# NextCloud/ownCloud clients cannot work without mod_rewrite
+	<IfModule mod_alias.c>
+		Redirect 501 /remote.php
+		Redirect 501 /status.php
+	</IfModule>
+
+	<If "-n env('paheko_bad_bot')">
+		Require all denied
+	</If>
+</IfModule>

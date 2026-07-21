@@ -1,0 +1,212 @@
+{{#restrict block=true section="accounting" level="write"}}
+{{/restrict}}
+
+{{if !$_POST}}
+	{{:error message="Aucune donnée fournie"}}
+{{/if}}
+
+{{if null === $r}}
+	{{:assign var="r" value=$_POST}}
+	{{:assign var="r.montant" value=$r.montant|money_int}}
+	{{:assign var="r.montant_nature" value=$r.montant_nature|money_int}}
+	{{:assign var="r.montant_numeraire" value=$r.montant_numeraire|money_int}}
+	{{:assign var="r.date" value=$r.date|parse_date}}
+	{{:assign total="%d+%d"|math:$r.montant_numeraire:$r.montant_nature}}
+{{/if}}
+
+{{if $r.annees}}
+	{{:assign var="r.periode_annee" value=$r.annees}}
+{{/if}}
+
+{{:include file="./_config_default.tpl" keep="module.config,types_asso"}}
+
+{{:assign var="type" from="types_asso.%s"|args:$module.config.type_asso}}
+
+{{if !$r.entreprise}}
+	<div class="info block">
+	{{if $module.config.type_asso === 'syndicat'}}
+		<h2>Merci pour votre cotisation&nbsp;!</h2>
+		<p>Elle vous permet de déduire de votre impôt sur le revenu {{$type.help}} Sauf si vous êtes aux frais réels, dans ce cas, déclarez-la dans vos frais.</p>
+		<p>Le crédit d'impôt vous sera remboursé en cas de non-imposition ou d'imposition inférieure au montant du crédit.</p>
+	{{else}}
+		<h2>Merci pour votre soutien&nbsp;!</h2>
+		<p>Il vous permet de déduire de votre impôt sur le revenu {{$type.help}}</p>
+	{{/if}}
+
+		<h3>Comment déclarer&nbsp;?</h3>
+
+		<p>Vous devez utiliser la <a href="https://www.impots.gouv.fr/formulaire/2042/declaration-des-revenus" target="_blank">déclaration complémentaire 2042-RICI</a>. Lors de la déclaration en ligne, cochez à l’étape 3 la case <em>«&nbsp;Réductions et crédits d’impôts&nbsp;»</em> située dans la rubrique <em>«&nbsp;Charges&nbsp;»</em>.</p>
+		<h4>Inscrivez la somme de <strong>{{$r.montant|raw|money_currency:true}}</strong> dans la case
+			<strong>{{$type.case}}</strong>
+		</h4>
+		<p>Conservez ce reçu au moins 3 ans. N'envoyez ce reçu au service des impôts que si vous déclarez vos impôts avec un formulaire papier. Aucun envoi n'est nécessaire pour les déclarations sur Internet.</p>
+	</div>
+{{/if}}
+
+<h3>
+	{{if $module.config.type_asso === 'syndicat'}}
+		Reçu des cotisations syndicales versées au titre de l'article 199 quater C du code général des impôts
+	{{elseif $r.entreprise}}
+		Reçu des dons et versements effectués par les entreprises au titre de l’article 238 bis du code général des impôts
+	{{else}}
+		Reçu des dons et versements effectués par les particuliers au titre des articles 200 et 978 du code général des impôts
+	{{/if}}
+</h3>
+
+<h4>Numéro d'ordre du reçu&nbsp;: {{if $preview}}(Brouillon){{else}}N°%ID%{{/if}}</h4>
+
+<table>
+	<tr>
+		<th style="width: 20%" rowspan="{{if $module.config.type_asso !== 'syndicat'}}5{{else}}3{{/if}}"><h3>Bénéficiaire des versements</h3></th>
+		<th style="width: 20%">Nom&nbsp;:</th>
+		<td>{{$config.org_name}}</td>
+	</tr>
+	<tr>
+		<th>Adresse&nbsp;:</th>
+		<td>{{$config.org_address|escape|replace:"\n":" — "}}</td>
+	</tr>
+	<tr>
+		<th>Type&nbsp;:</th>
+		<td>{{$type.label}}</td>
+	</tr>
+	{{if $module.config.type_asso !== 'syndicat'}}
+		<tr>
+			<th>Numéro SIREN ou RNA&nbsp;:</th>
+			<td>{{$module.config.numero_asso}}</td>
+		</tr>
+		<tr>
+			<th>Objet&nbsp;:</th>
+			<td>{{$module.config.objet_asso|escape|replace:"\n":" — "}}</td>
+		</tr>
+	{{/if}}
+</table>
+
+<table>
+	<tr>
+		<th style="width: 20%" rowspan="{{if $r.entreprise}}4{{else}}2{{/if}}"><h3>Donateur</h3></th>
+		<th style="width: 20%">Nom&nbsp;:</th>
+		<td>{{$r.nom}}</td>
+	</tr>
+	<tr>
+		<th>Adresse&nbsp;:</th>
+		<td>{{$r.adresse|escape|replace:"\n":" — "}}</td>
+	</tr>
+	{{if $r.entreprise}}
+	<tr>
+		<th>Forme juridique&nbsp;:</th>
+		<td>{{$r.entreprise_forme}}</td>
+	</tr>
+	<tr>
+		<th>Numéro SIREN&nbsp;:</th>
+		<td>{{$r.entreprise_numero}}</td>
+	</tr>
+	{{/if}}
+</table>
+
+{{if $r.entreprise}}
+	<p>
+		L’organisme bénéficiaire reconnaît avoir reçu, au titre de la réduction d’impôt prévue à l’article 238 bis du code général des impôts, des dons en nature pour une valeur en euros égale à&nbsp;:
+
+		{{$r.montant_nature|money_raw|spell_out_number:'fr_FR':'euros'}}
+		(***<strong>{{$r.montant_nature|raw|money_currency:false}}</strong>***).
+	</p>
+
+	<p><strong>Description exhaustive des biens et prestations reçus et acceptés (nature et quantité) et détail des salariés mis à disposition&nbsp;:</strong></p>
+	<p class="user block">
+		{{$r.description_nature|escape|nl2br|or:"—Néant—"}}
+	</p>
+
+	<p>L’organisme bénéficiaire reconnaît avoir reçu, au titre de la réduction d’impôt prévue à l’article 238 bis du code général des impôts, des versements pour une valeur totale égale à&nbsp;:
+
+		{{$r.montant_numeraire|money_raw|spell_out_number:'fr_FR':'euros'}}
+		(***<strong>{{$r.montant_numeraire|raw|money_currency:false}}</strong>***).
+	</p>
+
+	{{if $r.montant_numeraire}}
+		<p>Mode de versement&nbsp;:</p>
+		<ul class="checkboxes">
+		{{if $r.moyens_especes}}
+			<li>Remise d’espèces</li>
+		{{/if}}
+		{{if $r.moyens_cheques}}
+			<li>Chèque</li>
+		{{/if}}
+		{{if $r.moyens_autres}}
+			<li>Virement, prélèvement, carte bancaire, ou autre</li>
+		{{/if}}
+		</ul>
+	{{/if}}
+
+	<p>Montant total des dons et versements reçus par l’organisme&nbsp;:
+
+		{{$total|money_raw|spell_out_number:'fr_FR':'euros'}}
+		(***<strong>{{$total|raw|money_currency:false}}</strong>***).
+	</p>
+
+	<p>Date ou période au cours de laquelle les dons et versements ont été effectués&nbsp;: {{if $r.periode_annee}}cumul {{$r.periode_annee}}{{else}}{{$r.periode_date|date_short}}{{/if}}</p>
+
+{{else}}
+
+	{{if $module.config.type_asso === 'syndicat'}}
+		<p>Le bénéficiaire reconnaît avoir reçu des cotisations ouvrant droit à réduction d’impôt d’un montant de&nbsp;:
+			{{$r.montant|money_raw|spell_out_number:'fr_FR':'euros'}}
+			(***<strong>{{$r.montant|raw|money_currency:false}}</strong>***).
+		</p>
+
+		<p>Date du versement&nbsp;: {{if $r.periode_annee}}cumul {{$r.periode_annee}}{{else}}{{$r.periode_date|date_short}}{{/if}}</p>
+	{{else}}
+		<p>Le bénéficiaire reconnaît avoir reçu des dons et versements ouvrant droit à réduction d’impôt d’un montant de&nbsp;:
+			{{$r.montant|money_raw|spell_out_number:'fr_FR':'euros'}}
+			(***<strong>{{$r.montant|raw|money_currency:false}}</strong>***).
+		</p>
+
+		<p>Date du versement ou du don&nbsp;: {{if $r.periode_annee}}cumul {{$r.periode_annee}}{{else}}{{$r.periode_date|date_short}}{{/if}}</p>
+
+		<p>Le bénéficiaire certifie sur l’honneur que les dons et versements qu’il reçoit ouvrent droit à la réduction d’impôt prévue à l’article&nbsp;:<br />
+			{{if $module.config.art200}}[X] 200 du CGI{{/if}}
+			{{if $module.config.art978}}[X] 978 du CGI{{/if}}
+		</p>
+	{{/if}}
+
+	<table>
+		{{if $module.config.type_asso !== 'syndicat'}}
+			<tr>
+				<th style="width: 20%">Forme du don&nbsp;:</th>
+				<td><ul class="checkboxes"><li>Don manuel</li></ul></td>
+			</tr>
+		{{/if}}
+		<tr>
+			<th>Nature&nbsp;:</th>
+			<td>
+				<ul class="checkboxes">
+					{{if $r.numeraire}}<li>Numéraire</li>{{/if}}
+					{{if $r.nature}}<li>Don en nature</li>{{/if}}
+					{{if $r.abandon_frais}}<li>Frais engagés par les bénévoles, dont ils renoncent expressément au remboursement</li>{{/if}}
+				</ul>
+			</td>
+		</tr>
+		{{if $r.numeraire}}
+		<tr>
+			<th>Mode de versement&nbsp;:</th>
+			<td>
+				<ul class="checkboxes">
+				{{if $r.moyens_especes}}
+					<li>Remise d’espèces</li>
+				{{/if}}
+				{{if $r.moyens_cheques}}
+					<li>Chèque</li>
+				{{/if}}
+				{{if $r.moyens_autres}}
+					<li>Virement, prélèvement, carte bancaire, ou autre</li>
+				{{/if}}
+				</ul>
+			</td>
+		</tr>
+		{{/if}}
+	</table>
+
+{{/if}}
+
+<p>Date du reçu : {{$r.date|date_short}}</p>
+
+{{* La signature n'est pas stockée dans le reçu *}}

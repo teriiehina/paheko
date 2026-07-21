@@ -1,0 +1,195 @@
+{{if "random_int(1, 10)"|math == 10}}
+	{{* Prune old bookings from time to time *}}
+	{{:delete type="booking" where="date($$.date) < date('now', '-1 month')"}}
+{{/if}}
+
+{{if !$module.config.access}}
+	{{:assign var="module.config.access" value="write"}}
+{{/if}}
+
+{{#form on="cancel"}}
+	{{#load key=$_POST.cancel type="booking" limit=1 assign="booking"}}
+		{{:delete id=$id}}
+		{{#load key=$event type="event"}}
+			{{if $notify_email}}
+				{{:assign my_date=$booking.date|parse_datetime|date_long:true
+					fields=$booking.fields|array_to_list}}
+				{{:mail to=$notify_email subject="%s — Annulation"|args:$label body="Nom : %s\nDate : %s\nAdresse e-mail : %s\nDétails :\n%s"|args:$booking.name:$my_date:$booking.email:$fields notification=true}}
+			{{/if}}
+		{{/load}}
+	{{/load}}
+	{{:redirect to="./?deleted=%s"|args:$_POST.cancel}}
+{{/form}}
+
+{{if $_GET.event}}
+	{{#load type="event" key=$_GET.event assign="event" archived=false}}
+		{{:assign event_selected=true}}
+	{{else}}
+		{{:error message="L'événement indiqué est introuvable"}}
+	{{/load}}
+{{else}}
+	{{#load type="event" archived=false group="$$.type HAVING COUNT(*) = 1" assign="event"}}
+	{{/load}}
+{{/if}}
+
+{{:form_errors}}
+
+{{if $_GET.deleted}}
+<p class="confirm block" data-delete-booking="{{$_GET.deleted}}">
+	La réservation a bien été annulée.
+</p>
+{{/if}}
+
+{{if !$_GET.slot_time}}
+	<section class="my_bookings">
+	{{* New booking *}}
+	{{if $_GET.b}}
+		{{if $_GET.booked}}
+		<p class="confirm block">
+			Votre réservation a bien été enregistrée.
+		</p>
+		{{/if}}
+
+		{{#load type="booking" key=$_GET.b}}
+			{{#load type="event" key=$event assign="e"}}{{/load}}
+			{{:assign var="booking" label=$e.label name=$name event=$e.key key=$key date_str=$date|date_long date=$date|strtotime time_str=$date|date_hour}}
+			<article data-new-booking="{{$booking|json_encode}}">
+				<h5>Vous avez réservé&nbsp;:</h5>
+				<h2>{{$e.label}}</h2>
+				<h3>{{$date|date_long}} à <span>{{$date|date_hour}}</span></h3>
+				<h5>(Au nom de&nbsp;: {{$name}})</h5>
+				<form method="post" action="./" onsubmit="return confirm('Annuler la réservation ?');">
+					{{:button type="submit" name="cancel" value=$key label="Annuler cette réservation" shape="delete" class="main"}}
+				</form>
+			</article>
+		{{else}}
+			<p class="error block">La réservation indiquée est introuvable, elle a peut-être déjà été annulée.</p>
+		{{/load}}
+	{{/if}}
+		<template id="booking">
+			<article>
+				<h5>Vous avez réservé&nbsp;:</h5>
+				<h2>#label#</h2>
+				<h3>#date_str# à <span>#time_str#</span></h3>
+				<h5>(Au nom de&nbsp;: #name#)</h5>
+				<form method="post" action="./" onsubmit="return confirm('Annuler la réservation ?');">
+					{{:button type="submit" name="cancel" value="#key#" label="Annuler cette réservation" shape="delete" }}
+				</form>
+			</article>
+		</template>
+	</section>
+
+	{{if !$logged_user}}
+	<script type="text/javascript" src="local_bookings.js" defer="defer"></script>
+	{{/if}}
+{{/if}}
+
+{{if !$event}}
+	<header class="booking_header">
+		{{if $event_selected}}
+			<p class="back">{{:linkbutton shape="left" label="Liste des événements" href="./"}}</p>
+		{{/if}}
+	</header>
+
+	<section class="booking_events">
+		<h1 class="ruler">Réservations</h1>
+		<p class="help">Choisir un événement&nbsp;:</p>
+		{{#load type="event" order="$$.label" archived=false}}
+		<article>
+			<h2><a href="?event={{$key}}">{{$label}}</a></h2>
+		</article>
+		{{else}}
+			<p class="block alert">Il n'y a aucun événement réservable.</p>
+		{{/load}}
+	</section>
+
+{{else}}
+	{{#form on="book"}}
+		{{if !$_GET.slot_time || !$_GET.slot_time|parse_datetime}}
+			{{:error message="Date invalide"}}
+		{{/if}}
+
+		{{if $_GET.slot_key}}
+			{{* Vérification que le créneau sélectionné existe bien *}}
+			{{#load key=$_GET.slot_key type="slot" assign="slot"}}
+			{{else}}
+				{{:error message="Créneau introuvable"}}
+			{{/load}}
+
+			{{* Vérification qu'il y a encore des places dispo *}}
+			{{#load event=$event.key where="datetime($$.date) = datetime(:date)" slot=$slot.key :date=$_GET.slot_time type="booking" count=true}}
+				{{if $count >= $slot.seats}}
+					{{:error message="Ce créneau est déjà plein, aucune place n'est disponible, désolé."}}
+				{{/if}}
+			{{/load}}
+		{{/if}}
+
+		{{if !$_POST.name|trim}}
+			{{:error message="Le nom doit être renseigné."}}
+		{{/if}}
+
+		{{if $event.email && !$_POST.email|trim}}
+			{{:error message="L'adresse e-mail doit être renseignée."}}
+		{{/if}}
+
+		{{if $_POST.email|trim && !$_POST.email|trim|check_email}}
+			{{:error message="Adresse e-mail invalide."}}
+		{{/if}}
+
+		{{if $_POST.email|trim && !$logged_user}}
+			{{:captcha verify=true}}
+		{{/if}}
+
+		{{:assign fields=null}}
+
+		{{#foreach from=$event.fields key="i" item="field"}}
+			{{:assign var="value" from="_POST.fields.%d"|args:$i}}
+			{{:assign var="fields" append=$label value=$value}}
+			{{if $field.required && $value|trim === ''}}
+				{{:error message="Le champ '%s' doit être renseigné."|args:$field.label}}
+			{{/if}}
+		{{/foreach}}
+
+		{{:assign key=""|uuid}}
+		{{:assign name=$_POST.name|trim
+			email=$_POST.email|trim|or:null
+			my_date=$_GET.slot_time|parse_datetime|date_long:true}}
+
+		{{:save type="booking"
+			key=$key
+			validate_schema="./booking.schema.json"
+			slot=$slot.key
+			event=$event.key
+			date=$_GET.slot_time
+			name=$name
+			email=$email
+			id_user=$logged_user.id
+			fields=$fields
+		}}
+
+		{{if $event.notify_email}}
+			{{:assign fields=$fields|array_to_list}}
+			{{:assign body="Nouvelle réservation de :\n%s\n\nÉvénement : %s\nDate : %s\nAdresse e-mail : %s\nDétails :\n%s"|args:$name:$event.label:$my_date:$email:$fields}}
+			{{:mail to=$event.notify_email subject="%s — Nouvelle réservation"|args:$event.label body=$body notification=true}}
+		{{/if}}
+
+		{{if $_POST.email|trim}}
+			{{:assign url="%s?b=%s"|args:$module.url:$key}}
+			{{:mail to=$_POST.email|trim subject="Réservation du %s"|args:$my_date body="Vous avez réservé pour : %s\n\nLe : %s\n\nPour annuler votre réservation, cliquez ici :\n%s"|args:$event.label:$my_date:$url notification=true}}
+		{{/if}}
+
+		{{:redirect to="./?b=%s&booked=1"|args:$key}}
+	{{/form}}
+
+	{{if $_GET.slot_key !== null && $_GET.slot_time}}
+
+		{{:include file="./_confirm_slot_form.html"}}
+
+	{{else}}
+
+		{{:include file="./_create_slots_list.tpl" event=$event keep="slots"}}
+		{{:include file="./_slots_list.html" event=$event slots=$slots event_selected=$event_selected}}
+
+	{{/if}}
+
+{{/if}}

@@ -1,0 +1,102 @@
+{{if $slots === null || $event === null}}
+	{{:error admin="Missing mandatory variable"}}
+{{/if}}
+
+{{:assign last_date=null}}
+{{:assign slots_available=false}}
+
+<section class="booking_event">
+
+<article class="event">
+	<header class="booking_header">
+		{{if $event_selected}}
+			<p class="back">
+				{{:linkbutton shape="left" label="Liste des événements" href="./"}}
+				{{#restrict section="users" level=$module.config.access|or:'write'}}
+					{{:linkbutton shape="menu" label="Voir la liste des inscrits" href="bookings.html?event=%s"|args:$event.key}}
+				{{/restrict}}
+			</p>
+		{{/if}}
+	</header>
+
+	<h1>{{$event.label}}</h1>
+
+	{{if $event.description}}
+		{{$event.description|raw|markdown}}
+	{{/if}}
+</article>
+
+<section class="slots">
+	<h2 class="ruler">Créneaux disponibles</h2>
+
+{{#foreach from=$slots item="slot" key="timestamp"}}
+	{{:assign this_date=$timestamp|date:"Y-m-d"}}
+	{{:assign this_datetime=$timestamp|date:"Y-m-d H:i"}}
+
+	{{if $this_date != $last_date}}
+		{{if $last_date}}
+				</ul>
+			</article>
+		{{/if}}
+		{{:assign last_date=$this_date}}
+		<article>
+			<h3>{{$timestamp|date_long}}</h3>
+			<ul>
+
+		{{if $slot === null}}
+			<li><h4>Fermé — Closed</h4></li>
+		{{/if}}
+	{{/if}}
+
+	{{if $slot === null}}
+		{{* ignore closed times *}}
+		{{:continue}}
+	{{/if}}
+
+	{{:assign count=0}}
+	{{if $slot.key}}
+		{{#load count=true slot=$slot.key date=$this_datetime}}
+			{{:assign count=$count}}
+		{{/load}}
+	{{else}}
+		{{#load count=true where="$$.slot IS NULL" date=$this_datetime}}
+			{{:assign count=$count}}
+		{{/load}}
+	{{/if}}
+
+	{{:assign available="max(0, %d-%d)"|math:$slot.seats:$count}}
+
+	{{if $available > 0 && $slots_available === false}}
+		{{:assign slots_available=true}}
+	{{/if}}
+
+	{{if !$available}}
+		{{:assign disabled=true}}
+	{{else}}
+		{{:assign disabled=false}}
+	{{/if}}
+
+	{{if $available == 1}}
+		{{:assign label="1 place disponible"}}
+	{{else}}
+		{{:assign label="%d places disponibles"|args:$available}}
+	{{/if}}
+
+	<li>
+		<a{{if !$disabled}} href="?event={{$event.key}}&amp;slot_key={{$slot.key}}&amp;slot_time={{$this_datetime}}"{{/if}} class="available_{{$available}} {{if $disabled}}disabled{{/if}}">
+			<strong>{{$timestamp|date_hour}}</strong>
+			<em>{{$label}}</em>
+		</a>
+	</li>
+{{/foreach}}
+
+{{if $last_date}}
+	</ul>
+</article>
+{{/if}}
+
+{{if !$slots_available}}
+	<p class="alert block">Aucun créneau n'est disponible.</p>
+{{/if}}
+
+</section>

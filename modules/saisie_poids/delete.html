@@ -1,0 +1,15 @@
+{{#load assign="entry" id=$_GET.id|intval}}
+{{else}}
+	{{:error message="Enregistrement introuvable"}}
+{{/load}}
+
+{{#form on="delete"}}
+	{{:delete id=$entry.id}}
+	{{:redirect to="./history.html"}}
+{{/form}}
+
+{{:admin_header title="Supprimer entrée"}}
+
+{{:delete_form legend="Supprimer un enregistrement" warning="Supprimer cet enregistrement ?"}}
+
+{{:admin_footer}}

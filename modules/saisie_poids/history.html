@@ -1,0 +1,26 @@
+{{:admin_header title="Historique des saisies" current="module_saisie_poids"}}
+
+{{:include file="_nav.html" current="history"}}
+
+{{#list
+	select="$$.date AS 'Date'; $$.type AS 'Mouvement'; $$.category AS 'Catégorie'; $$.weight AS 'Poids unitaire'; $$.qty AS 'Qté'; $$.total_weight AS 'Poids total'; $$.object AS 'Type d''objet'"
+	order=1
+	where="$$.type IN ('exit', 'entry')"
+	desc=true}}
+	<tr>
+		<th>{{$date|date_short:true}}</th>
+		<td>{{if $type === 'entry'}}Entrée{{else}}Sortie{{/if}}</td>
+		<td>{{$category}}</td>
+		<td class="money">{{$weight|weight:false:true}}</td>
+		<td class="num">{{$qty}}</td>
+		<td class="money">{{$total_weight|weight:true:true}}</td>
+		<td>{{$object}}</td>
+		<td class="actions">
+			{{:linkbutton shape="delete" href="delete.html?id=%d"|args:$id label="Supprimer" target="_dialog"}}
+		</td>
+	</tr>
+{{else}}
+	<p class="block alert">Aucun élément dans l'historique.</p>
+{{/list}}
+
+{{:admin_footer}}

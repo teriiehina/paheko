@@ -1,0 +1,104 @@
+{{#restrict section="config" level="admin" block=true}}{{/restrict}}
+{{:admin_header title="Configuration des horaires d'ouverture"}}
+
+{{if $_POST.save}}
+	{{#foreach from=$_POST.slots|array_transpose key="i" item="slot"}}
+		{{:assign line="%d+1"|math:$i}}
+		{{:assign open=$slot.open|explode:':' close=$slot.close|explode:':'}}
+		{{:assign var="slot"
+			day=$slot.day
+			frequency=$slot.frequency
+			open='%02d:%02d'|args:$open.0:$open.1
+			close='%02d:%02d'|args:$close.0:$close.1
+		}}
+		{{* Use timestamp to order slots *}}
+		{{:assign timestamp="%s %s of this month, %s:00"|args:$slot.frequency:$slot.day:$slot.open|strtotime}}
+
+		{{if !$timestamp}}
+			{{:error message="Date invalide : %s %s of this month, %s:00"|args:$slot.frequency:$slot.day:$slot.open}}
+		{{/if}}
+
+		{{:assign var="slots.%d"|args:$timestamp value=$slot}}
+
+		{{if !"%s %s"|args:$slot.frequency:$slot.day|trim|strtotime}}
+			{{:assign error="Ouvertures - ligne %d : le sélecteur de jour est invalide: %s %s"|args:$line:$slot.frequency:$slot.day}}
+			{{:break}}
+		{{elseif !$slot.open|regexp_match:'/^(2[0-3]|[01][0-9]):([0-5][0-9])$/'}}
+			{{:assign error="Ouvertures - ligne %d: heure d'ouverture invalide."|args:$line}}
+			{{:break}}
+		{{elseif !$slot.close|regexp_match:'/^(2[0-3]|[01][0-9]):([0-5][0-9])$/'}}
+			{{:assign error="Ouvertures - ligne %d: heure de fermeture invalide."|args:$line}}
+			{{:break}}
+		{{/if}}
+	{{/foreach}}
+
+	{{if $error}}
+		<p class="error block">{{$error}}</p>
+	{{else}}
+		{{:save key="config"
+			validate_schema="./schema.json"
+			open=$slots|ksort|values
+			closed=$_POST.closed|array_transpose
+		}}
+		{{:redirect to="?ok=1"}}
+	{{/if}}
+{{/if}}
+
+{{if $_GET.ok}}
+	<p class="block confirm">Configuration enregistrée.</p>
+{{/if}}
+
+<form method="post" action="{{$self_url}}">
+
+	<fieldset class="slots">
+		<legend>Heures d'ouvertures</legend>
+		<p class="help">Indiquer ici les jours et heures d'ouverture. Ils apparaîtront sur le site web.</p>
+		<table class="list">
+			<thead>
+				<tr>
+					<td>Occurrence</td>
+					<td>Jour</td>
+					<td>De</td>
+					<td>À</td>
+					<td></td>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+		<p class="actions">{{:button shape="plus" label="Ajouter une ligne"}}</p>
+	</fieldset>
+
+	<fieldset class="closed">
+		<legend>Jours de fermeture exceptionnelle</legend>
+		<p class="help">Indiquer ici les périodes de fermeture pour jours fériés, congés, etc.</p>
+		<table class="list">
+			<thead>
+				<tr>
+					<td>Du</td>
+					<td>Au</td>
+					<td>Raison (facultatif)</td>
+					<td></td>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+		<p class="actions">{{:button shape="plus" label="Ajouter une ligne"}}</p>
+	</fieldset>
+
+	<p class="submit">
+		{{:button type="submit" name="save" label="Enregistrer" shape="right" class="main"}}
+	</p>
+
+	{{:include file="./_common.tpl" keep="months,frequencies,days"}}
+	<script type="text/javascript">
+	const months = {{$months|json_encode|raw}};
+	const frequencies = {{$frequencies|json_encode|raw}};
+	const days = {{$days|json_encode|raw}};
+	var open_data = {{$module.config|json_encode|raw}};
+	</script>
+	<script type="text/javascript" src="{{$module.url}}config.js"></script>
+</form>
+
+{{:admin_footer}}

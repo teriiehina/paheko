@@ -1,0 +1,338 @@
+{{#restrict block=true section="accounting" level="write"}}
+{{/restrict}}
+
+{{if $module.config.type_asso !== 'syndicat'}}
+	{{if !$module.config.objet_asso}}
+		{{:redirect force="config.html?msg=MISSING"}}
+	{{elseif !$module.config.numero_asso}}
+		{{:redirect force="config.html?msg=MISSING_NUMBER"}}
+	{{/if}}
+{{/if}}
+
+{{:include file="./_config_default.tpl" keep="module.config"}}
+
+{{#years order="end_date DESC"}}
+	{{:assign var="year" value=$end_date|date:'Y'}}
+	{{:assign var="years.%d.%d"|args:$year:$id id=$id start_date=$start_date end_date=$end_date label=$label}}
+	{{:assign var="years_select.%d"|args:$year value=$year}}
+	{{:assign var="year" value=$start_date|date:'Y'}}
+	{{:assign var="years.%d.%d"|args:$year:$id id=$id start_date=$start_date end_date=$end_date label=$label}}
+	{{:assign var="years_select.%d"|args:$year value=$year}}
+{{else}}
+	{{:error message="Aucun exercice comptable n'est disponible."}}
+{{/years}}
+{{:assign var="last_year" value=$years_select|max}}
+
+{{#form on="create"}}
+	{{#foreach from=$_POST.new key="line" item="row"}}
+		{{:assign row=$row|json_decode}}
+		{{:assign skip=false}}
+
+		{{if !$row.id_year}}
+			{{:error message="Identifiant d'exercice manquant" admin=true}}
+		{{/if}}
+
+		{{if $row.id_transaction|trim|strlen}}
+			{{:assign id_transaction=$row.id_transaction|explode:','|map:intval}}
+			{{:assign in_transaction="value"|sql_where:'IN':$id_transaction}}
+			{{#load each="linked_transactions" where="$$.linked_transactions IS NOT NULL AND $$.annule = 0 AND %s"|args:$in_transaction}}
+				{{:assign var="skipped." value="- ligne %d : le reçu n°%d a déjà été créé pour l'écriture #%d"|args:$line:$id:$value}}
+				{{:assign skip=true}}
+			{{/load}}
+		{{/if}}
+
+		{{if $skip}}
+			{{:continue}}
+		{{/if}}
+
+		{{:assign var="row.date" value=$now}}
+
+		{{:include file="./_recu.html" capture="recu" r=$row}}
+
+		{{:save
+			validate_schema="./recu.schema.json"
+			assign_new_id="new_id"
+			nom=$row.nom
+			date=$now|date_format:'%Y-%m-%d'
+			montant=$row.montant
+			linked_user=$row.id_user
+			linked_transactions=$row.id_transaction|explode:','|map:intval
+			annule=false
+			id_year=$row.id_year|intval|or:null
+			recu=$recu
+		}}
+	{{/foreach}}
+
+	{{if $skipped}}
+		{{:assign skipped=$skipped|implode:"\n"}}
+		{{:error message="Des reçus n'ont pas pu être créés car leurs écritures étaient déjà utilisées dans d'autres reçus :\n%s\nPour créer de nouveaux reçus liés à ces écritures, il faut déjà annuler les reçus existants."|args:$skipped}}
+	{{/if}}
+
+	{{:redirect to=$module.url}}
+{{/form}}
+
+{{:admin_header title="Générer des reçus" current="acc"}}
+
+
+{{if !$dialog}}
+<nav class="tabs">
+	{{:linkbutton href="./" label="Retour à la liste des reçus" shape="left"}}
+</nav>
+{{/if}}
+
+{{:form_errors}}
+
+{{if !$_POST.year}}
+	<form method="post" action="">
+		<fieldset>
+			<legend>Générer tous les reçus d'une année</legend>
+			<dl>
+				{{:input type="select" name="year" label="Année" required=true options=$years_select default=$last_year}}
+			</dl>
+			{{#foreach from=$years key="year" item="list"}}
+				<dl class="y{{$year}} hidden">
+					<dt><strong>Exercices à utiliser pour {{$year}}</strong></dt>
+					{{#foreach from=$list}}
+						{{:assign start=$start_date|date_short end=$end_date|date_short}}
+						{{:input type="checkbox" name="years[%d][]"|args:$year value=$id default=null label="%s — du %s au %s"|args:$label:$start:$end}}
+					{{/foreach}}
+				</dl>
+			{{/foreach}}
+		</fieldset>
+
+		<p class="submit">
+			{{:button type="submit" shape="right" label="Prévisualiser" class="main"}}
+		</p>
+	</form>
+
+	<script type="text/javascript">
+	var s = $('#f_year');
+	function selectYear() {
+		for (var i = 0; i < s.options.length; i++) {
+			g.toggle('.y' + s.options[i].value, false);
+		}
+		g.toggle('.y' + s.value, true);
+		$('.y' + s.value + ' input').forEach((e) => e.checked = true);
+	}
+	s.onchange = selectYear;
+	selectYear();
+	</script>
+{{else}}
+	{{if !$_POST.year|intval|in:$years_select}}
+		{{:error message="Année inconnue"}}
+	{{/if}}
+
+	{{:assign year=$_POST.year|intval}}
+	{{:assign var="selected_years" from="_POST.years.%d"|args:$year}}
+
+	{{if !$selected_years|count}}
+		{{:error message="Aucun exercice n'est coché"}}
+	{{/if}}
+
+	{{:assign var="years_available" from="years.%d"|args:$_POST.year}}
+
+	{{#foreach from=$selected_years item="sy"}}
+		{{if !$sy|key_in:$years_available}}
+			{{:error message="L'exercice sélectionné %d ne correspond pas à l'année %d"|args:$sy:$year}}
+		{{/if}}
+		{{:assign var="selected_years_ids." value=$sy|intval}}
+	{{/foreach}}
+
+	{{* Récupération des comptes et soldes *}}
+	{{:assign var="codes_don" value=$module.config.comptes_don|keys|map:strval}}
+	{{:assign var="codes_don_abandon_frais" value=$module.config.comptes_don_abandon_frais|keys|map:strval}}
+	{{:assign var="codes_don_nature" value=$module.config.comptes_don_nature|keys|map:strval}}
+	{{:assign var="codes_especes" value=$module.config.comptes_especes|keys|map:strval}}
+	{{:assign var="codes_cheques" value=$module.config.comptes_cheques|keys|map:strval}}
+	{{:assign var="champs_adresse" value=$module.config.champs_adresse|sql_user_fields:"u":" — "}}
+	{{:assign var="champs_nom" value=$config.user_fields.name|sql_user_fields:"u"}}
+	{{:assign var="champs_numero" value=$config.user_fields.number|sql_user_fields:"u"}}
+	{{:assign var="champ_entreprise_numero" value=$module.config.champ_entreprise_numero|sql_user_fields:"u"}}
+	{{:assign var="champ_entreprise_forme" value=$module.config.champ_entreprise_forme|sql_user_fields:"u"}}
+	{{:assign var="total" value=0}}
+	{{:assign var="count" value=0}}
+
+	{{if $module.table}}
+		{{:assign join_existing="LEFT JOIN %s m ON json_extract(m.document, '$.linked_user') = u.id
+				AND json_extract(m.document, '$.annule') = 0
+				AND t.id IN (SELECT value FROM json_each(m.document, '$.linked_transactions'))"|args:$module.table
+			select_existing="m.id AS existing"}}
+	{{else}}
+		{{:assign select_existing="NULL AS existing"}}
+	{{/if}}
+
+	{{#select
+		*,
+		GROUP_CONCAT(existing) AS existing,
+		GROUP_CONCAT(tid, ',') AS id_transaction,
+		SUM(total_numeraire) AS montant_numeraire,
+		SUM(total_nature) AS montant_nature,
+		SUM(montant) AS montant,
+		SUM(total_numeraire) > 0 AS numeraire,
+		SUM(total_abandon_frais) > 0 AS abandon_frais,
+		SUM(total_nature) > 0 AS nature,
+		SUM(total_especes) > 0 AS moyens_especes,
+		SUM(total_cheques) > 0 AS moyens_cheques,
+		(SUM(total_numeraire) - IFNULL(SUM(total_especes), 0) - IFNULL(SUM(total_cheques), 0)) AS moyens_autres,
+		entreprise_forme IS NOT NULL AND entreprise_numero IS NOT NULL AS entreprise
+		FROM (
+			SELECT
+			t.id_year,
+			!select_existing,
+			strftime('%Y', t.date) AS periode_annee,
+			u.id AS id_user,
+			!champs_numero AS numero,
+			t.id AS tid,
+			SUM(l1.credit) AS montant,
+			a1.code AS account,
+			!champs_nom AS nom,
+			!champs_adresse AS adresse,
+			!champ_entreprise_forme AS entreprise_forme,
+			!champ_entreprise_numero AS entreprise_numero,
+			-- Paiements en espèces?
+			(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+				INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_especes
+				WHERE l2.credit = 0 AND l2.id_transaction = t.id LIMIT 1) AS total_especes,
+			-- Paiements en chèques?
+			(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+				INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_cheques
+				WHERE l2.credit = 0 AND l2.id_transaction = t.id LIMIT 1) AS total_cheques,
+			-- Dons en abandon de frais ?
+			(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+				INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_don_abandon_frais
+				WHERE l2.debit = 0 AND l2.id_transaction = t.id) AS total_abandon_frais,
+			-- Dons en nature ?
+			(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+				INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_don_nature
+				WHERE l2.debit = 0 AND l2.id_transaction = t.id) AS total_nature,
+			-- Dons en numeraire ?
+			(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+				INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_don
+				WHERE l2.debit = 0 AND l2.id_transaction = t.id) AS total_numeraire
+
+			FROM acc_transactions t
+			INNER JOIN (SELECT DISTINCT tu.id_transaction, tu.id_user FROM acc_transactions_users tu) tu ON tu.id_transaction = t.id
+			INNER JOIN users u ON tu.id_user = u.id
+			INNER JOIN acc_transactions_lines l1 ON l1.id_transaction = t.id AND l1.credit != 0
+			INNER JOIN acc_accounts a1 ON a1.id = l1.id_account AND (a1.!codes_don_nature OR a1.!codes_don OR a1.!codes_don_abandon_frais)
+			!join_existing
+
+			WHERE t.!years
+				AND t.date >= :start_date
+				AND t.date <= :end_date
+
+			GROUP BY tu.id_user
+		)
+		GROUP BY id_user
+		ORDER BY nom COLLATE U_NOCASE;
+
+		!champs_nom=$champs_nom
+		!champs_adresse=$champs_adresse
+		!champs_numero=$champs_numero
+		!champ_entreprise_forme=$champ_entreprise_forme
+		!champ_entreprise_numero=$champ_entreprise_numero
+		!codes_don_nature="code"|sql_where:"IN":$codes_don_nature
+		!codes_don_abandon_frais="code"|sql_where:"IN":$codes_don_abandon_frais
+		!codes_don="code"|sql_where:"IN":$codes_don
+		!codes_especes="code"|sql_where:"IN":$codes_especes
+		!codes_cheques="code"|sql_where:"IN":$codes_cheques
+		!years="id_year"|sql_where:"IN":$selected_years_ids
+		!join_existing=$join_existing
+		!select_existing=$select_existing
+		:start_date="%d-01-01"|args:$year
+		:end_date="%d-12-31"|args:$year
+		assign="rows."
+	}}
+	{{/select}}
+
+	{{if !$rows}}
+		<p class="alert block">Aucune écriture correspondant aux comptes configurés n'a été trouvée.</p>
+	{{else}}
+		<form method="post" action="">
+
+		<table class="list">
+			<thead>
+				<tr>
+					<td class="check"></td>
+					<td class="num">Num.</td>
+					<td>Nom du membre</td>
+					<td>Adresse</td>
+					<td>Espèces</td>
+					<td>Chèque</td>
+					<td>Autres</td>
+					<td>Abandon de frais</td>
+					<td>En nature</td>
+					<td class="money">Montant des dons</td>
+					<td></td>
+				</tr>
+			</thead>
+			<tbody>
+			{{#foreach from=$rows key="line" item="row"}}
+				{{if $entreprise && $total_nature|or:$total_abandon_frais}}
+					{{:assign locked=true}}
+					{{:assign has_locked=true}}
+				{{else}}
+					{{:assign locked=false}}
+				{{/if}}
+				<tr class="{{if !$locked && !$row.existing}}checked{{/if}}{{if $row.existing}} disabled{{/if}}">
+					<td class="check">
+					{{:assign line="%d+1"|math:$line}}
+					{{if !$locked && !$row.existing}}
+						{{:input type="checkbox" name="new[%d]"|args:$line value=$row|json_encode checked=true}}
+					{{elseif $locked}}
+						{{:icon shape="alert" title="Saisie manuelle obligatoire"}}
+					{{/if}}
+					</td>
+					<td class="num">
+						{{:link href="!users/details.php?id=%d"|args:$id_user label=$numero}}
+					</td>
+					<th>{{$nom}}</th>
+					<td>{{$adresse}}</td>
+					<td>{{if $moyens_especes}}{{:icon shape="check"}}{{/if}}</td>
+					<td>{{if $moyens_cheques}}{{:icon shape="check"}}{{/if}}</td>
+					<td>{{if $moyens_autres}}{{:icon shape="check"}}{{/if}}</td>
+					<td>{{if $abandon_frais}}{{:icon shape="check"}}{{/if}}</td>
+					<td>{{if $nature}}{{:icon shape="check"}}{{/if}}</td>
+					<td class="money">{{$montant|money}}</td>
+					<td class="actions">
+						{{if $row.existing}}
+							{{:linkbutton shape="delete" label="Annuler" href="annuler.html?id=%d"|args:$row.existing target="_dialog"}}
+							{{:linkbutton shape="mail" label="Envoyer" href="envoyer.html?id=%d"|args:$row.existing target="_dialog"}}
+							{{:linkbutton shape="eye" label="Ouvrir" href="recu.html?id=%d"|args:$row.existing target="_dialog"}}
+						{{else}}
+							{{:linkbutton shape="plus" href="nouveau.html?id_user=%d&type=user"|args:$id_user label="Saisie manuelle du reçu"}}
+							{{:linkbutton shape="menu" href="!acc/transactions/user.php?id=%d&year=%d"|args:$id_user:$_GET.id_year label="Liste des écritures" target="_dialog"}}
+						{{/if}}
+					</td>
+				</tr>
+				{{:assign var="total" value="%d+%d"|math:$total:$montant}}
+				{{:assign var="count" value="%d+1"|math:$count}}
+			{{/foreach}}
+			</tbody>
+			<tfoot>
+				<tr>
+					<td colspan="2"></td>
+					<td colspan="7">Total des dons</td>
+					<td class="money">{{$total|money}}</td>
+					<td></td>
+				</tr>
+			</tfoot>
+		</table>
+
+		<p class="help">
+			Note&nbsp;: un reçu créé ne peut plus être modifié, mais seulement annulé.
+			{{if $has_locked}}
+				<br />
+				Les lignes ayant le symbole {{:icon shape="alert" title="Saisie manuelle obligatoire"}} nécessitent une saisie manuelle obligatoire (entreprises ayant effectué un don en nature).
+			{{/if}}
+		</p>
+
+		<p class="submit">
+			{{:button type="submit" name="create" shape="right" label="Créer ces reçus" class="main"}}
+		</p>
+
+		</form>
+	{{/if}}
+{{/if}}
+
+{{:admin_footer}}

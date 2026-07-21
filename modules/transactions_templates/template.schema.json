@@ -1,0 +1,106 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"properties": {
+		"name": {
+			"description": "Libellé du modèle",
+			"type": "string"
+		},
+		"help": {
+			"description": "Aide à la saisie",
+			"type": ["string", "null"]
+		},
+		"t": {
+			"description": "Type de l'écriture",
+			"type": "integer"
+		},
+		"l": {
+			"description": "Libellé de l'écriture",
+			"type": ["string", "null"]
+		},
+		"dt": {
+			"description": "Date de l'écriture",
+			"type": ["string", "null"]
+		},
+		"r": {
+			"description": "Référence de l'écriture",
+			"type": ["string", "null"]
+		},
+		"a00": {
+			"description": "Montant de l'écriture (simplifiée)",
+			"type": ["null", "integer"]
+		},
+		"pr": {
+			"description": "Référence de paiement",
+			"type": ["string", "null"]
+		},
+		"p": {
+			"description": "ID du projet analytique",
+			"type": ["integer", "null"]
+		},
+		"ar": {
+			"description": "Code du compte de recette (produit)",
+			"type": ["string", "null"]
+		},
+		"ae": {
+			"description": "Code du compte de dépense (charge)",
+			"type": ["string", "null"]
+		},
+		"ab": {
+			"description": "Code du compte de banque ou caisse (pour écritures de recette, dépense ou virement)",
+			"type": ["string", "null"]
+		},
+		"at": {
+			"description": "Code du compte de banque ou de caisse destinataire du virement",
+			"type": ["string", "null"]
+		},
+		"a3": {
+			"description": "Code du compte de tiers",
+			"type": ["string", "null"]
+		},
+		"n": {
+			"description": "Remarques",
+			"type": ["string", "null"]
+		},
+		"ll": {
+			"description": "Lignes de l'écriture avancée",
+			"type": ["array", "null"],
+			"items": {
+				"type": "object",
+				"properties": {
+					"a": {
+						"description": "Code du compte",
+						"type": ["string", "null"]
+					},
+					"d": {
+						"description": "Débit",
+						"type": ["string", "null"]
+					},
+					"c": {
+						"description": "Crédit",
+						"type": ["string", "null"]
+					},
+					"l": {
+						"description": "Libellé ligne",
+						"type": ["string", "null"]
+					},
+					"r": {
+						"description": "Référence ligne",
+						"type": ["string", "null"]
+					},
+					"k": {
+						"description": "Bloquer saisie",
+						"type": ["string", "null"],
+						"enum": ["d", "c", "a"]
+					},
+					"p": {
+						"description": "Projet",
+						"type": ["integer", "null"]
+					}
+				}
+			},
+			"required": [ "a", "d", "c", "l", "r", "p" ]
+		}
+	},
+	"required": [ "name", "help", "t", "l", "dt", "r", "a00", "p", "ar", "ae", "ab", "at", "a3", "ll"]
+}

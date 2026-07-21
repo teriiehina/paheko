@@ -1,0 +1,49 @@
+<nav class="tabs">
+	<aside>
+	{{if $current === 'stats' || $current === 'history'}}
+		{{:exportmenu right=true}}
+	{{elseif $current === 'config' && $type === 'category'}}
+		{{:linkbutton shape="plus" href="edit.html?key=new&target=%s"|args:$target label="Ajouter une catégorie"}}
+	{{elseif $current === 'config' && $type === 'object'}}
+		{{:linkbutton shape="plus" href="edit.html?key=new&target=%s"|args:$target label="Ajouter un type d'objet"}}
+	{{/if}}
+	</aside>
+	<ul>
+		<li{{if $current === 'entry'}} class="current"{{/if}}><a href="{{$module.url}}">Entrée</a></li>
+		<li{{if $current === 'exit'}} class="current"{{/if}}><a href="./?type=exit">Sortie</a></li>
+		<li{{if $current === 'history'}} class="current"{{/if}}><a href="{{$module.url}}history.html">Historique</a></li>
+		<li{{if $current === 'stats'}} class="current"{{/if}}><a href="{{$module.url}}stats.html">Statistiques</a></li>
+	{{if $module.config.caisse_exit|count || $module.config.velos_exit|count || $module.config.velos_entry|count}}
+		<li{{if $current === 'sync'}} class="current"{{/if}}><a href="{{$module.url}}sync.html">Import extensions</a></li>
+	{{/if}}
+	{{#restrict section="config" level="admin"}}
+		<li{{if $current === 'config'}} class="current"{{/if}}><a href="{{$module.url}}config/list.html?type=category">Configuration</a></li>
+	{{/restrict}}
+	</ul>
+
+	{{if $current === 'stats'}}
+		<ul class="sub">
+			<li{{if $type === 'entry'}} class="current"{{/if}}>{{:link href="?period=%s&type=entry"|args:$period label="Entrées"}}</li>
+			<li{{if $type === 'exit'}} class="current"{{/if}}>{{:link href="?period=%s&type=exit"|args:$period label="Sorties"}}</li>
+			<li{{if $type === 'declare'}} class="current"{{/if}}>{{:link href="?period=%s&type=declare"|args:$period label="Déclaration Ecologic"}}</li>
+		</ul>
+		<ul class="sub">
+			<li{{if $period === 'month'}} class="current"{{/if}}>{{:link href="?period=month&type=%s"|args:$type label="Par mois"}}</li>
+			<li{{if $period === 'quarter'}} class="current"{{/if}}>{{:link href="?period=quarter&type=%s"|args:$type label="Par trimestre"}}</li>
+			<li{{if $period === 'year'}} class="current"{{/if}}>{{:link href="?period=year&type=%s"|args:$type label="Par année"}}</li>
+		</ul>
+	{{elseif $current === 'config'}}
+		<ul class="sub">
+			<li{{if $target === 'entry'}} class="current"{{/if}}><a href="{{$module.url}}config/list.html?type={{$type|or:"category"}}&target=entry">Entrées</a></li>
+			<li{{if $target === 'exit'}} class="current"{{/if}}><a href="{{$module.url}}config/list.html?type={{$type|or:"category"}}&target=exit">Sorties</a></li>
+			<li{{if !$target}} class="current"{{/if}}><a href="{{$module.url}}config.html">Connexion avec les autres extensions</a></li>
+		</ul>
+
+		{{if $target}}
+		<ul class="sub">
+			<li{{if $type === 'category'}} class="current"{{/if}}><a href="{{$module.url}}config/list.html?type=category&target={{$target}}">{{if $target == 'entry'}}Provenances{{else}}Motifs de sortie{{/if}}</a></li>
+			<li{{if $type === 'object'}} class="current"{{/if}}><a href="{{$module.url}}config/list.html?type=object&target={{$target}}">Types d'objets</a></li>
+		</ul>
+		{{/if}}
+	{{/if}}
+</nav>

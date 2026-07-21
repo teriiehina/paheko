@@ -1,0 +1,39 @@
+{{#restrict block=true section="accounting" level="read"}}
+{{/restrict}}
+
+{{:include file="./_config_default.tpl"}}
+
+{{:admin_header title="Reçus fiscaux — Récapitulatif pour déclaration" current="acc"}}
+
+<nav class="tabs">
+	<ul>
+		<li><a href="./">Liste des reçus</a></li>
+		<li class="current"><a href="./recap.html">Récapitulatif pour déclaration</a></li>
+	</ul>
+</nav>
+
+<div class="block help">
+	<p>Depuis 2022, l'administration fiscale demande aux associations délivrant des reçus fiscaux de procéder à une déclaration annuelle&nbsp;:</p>
+	<ul>
+		<li>du montant cumulé des dons et versements perçus ayant donné lieu à l’émission d’un reçu fiscal ;</li>
+		<li>du nombre de reçus délivrés.</li>
+	</ul>
+	<p>Et ce, dans un délai de 3 mois suivant la clôture de l'exercice.</p>
+	<p>{{:linkbutton shape="right" target="_blank" label="Déclarer les dons auprès de l'administration" href="https://www.demarches-simplifiees.fr/commencer/declaration-des-dons"}}</p>
+</div>
+
+{{#list select="SUBSTR($$.date, 1, 4) AS 'Année de création du reçu'; (SELECT label FROM acc_years WHERE id = $$.id_year) AS 'Exercice concerné'; SUM($$.montant) AS 'Montant cumulé'; COUNT(id) AS 'Nombre de reçus'" where="$$.annule = 0" group="$$.id_year, CASE WHEN $$.id_year IS NULL THEN SUBSTR($$.date, 1, 4) ELSE NULL END" order=1 count="COUNT(DISTINCT COALESCE($$.id_year, SUBSTR($$.date, 1, 4)))"}}
+	<tr>
+		<th>{{if !$col2}}{{$col1}}{{/if}}</th>
+		<th>{{if !$col2}}<em>— Non spécifié —</em>{{else}}{{$col2}}{{/if}}</th>
+		<td>{{$col3|raw|money_currency}}</td>
+		<td>{{$col4}}</td>
+		<td></td>
+	</tr>
+{{else}}
+	<p class="block alert">
+		Il n'y a aucun reçu enregistré.
+	</p>
+{{/list}}
+
+{{:admin_footer}}

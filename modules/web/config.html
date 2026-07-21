@@ -1,0 +1,176 @@
+{{:admin_header title="Configuration du site web"}}
+
+{{#form on="save"}}
+	{{:assign uri=null}}
+	{{if $_POST.home_sticky_uri|trim}}
+		{{:assign uri=$_POST.home_sticky_uri|trim|regexp_replace:'!^.*?([a-zA-Z0-9_-]+)$!':"$1"}}
+		{{#pages uri=$uri}}
+		{{else}}
+			{{:error message="Cette page n'existe pas ou est en brouillon : %s"|args:$uri}}
+		{{/pages}}
+	{{/if}}
+
+	{{:assign var="checkboxes.show_search" value=null}}
+	{{:assign var="checkboxes.show_hours" value=null}}
+	{{:assign var="checkboxes.show_bookings" value=null}}
+	{{:assign var="checkboxes.show_address" value=null}}
+	{{:assign var="checkboxes.show_email" value=null}}
+	{{:assign var="checkboxes.show_phone" value=null}}
+	{{:assign var="checkboxes.show_marker" value=null}}
+	{{:assign var="checkboxes.contact_form" value=null}}
+	{{:assign var="checkboxes.show_login" value=null}}
+
+	{{#foreach from=$checkboxes key="name"}}
+		{{:assign var="present" from="_POST.%s_present"|args:$name}}
+		{{:assign var="value" from="_POST.%s"|args:$name}}
+		{{if $present}}
+			{{:assign var="checkboxes.%s"|args:$name value=$value|boolval}}
+		{{/if}}
+	{{/foreach}}
+
+	{{:save key="config"
+		color1=null
+		color2=null
+		hue1=$_POST.hue1|intval
+		hue2=$_POST.hue2|intval
+		layout=$_POST.layout|trim|or:null
+		background=$_POST.background|trim|or:null
+		show_search=$checkboxes.show_search
+		show_hours=$checkboxes.show_hours
+		show_bookings=$checkboxes.show_bookings
+		show_address=$checkboxes.show_address
+		show_email=$checkboxes.show_email
+		show_phone=$checkboxes.show_phone
+		show_marker=$checkboxes.show_marker
+		contact_form=$checkboxes.contact_form
+		show_login=$checkboxes.show_login
+		home_sticky_uri=$uri|or:null
+	}}
+	{{:redirect to="?ok=1"}}
+{{/form}}
+
+{{if $_GET.ok}}
+	<p class="block confirm">Configuration enregistrée.</p>
+{{/if}}
+
+{{:form_errors}}
+
+<form method="post" action="">
+
+{{:assign var="layouts"
+	2col="Classique — 2 colonnes"
+	1col="Classique — 1 colonne"
+	wide="Large — 2 colonnes"
+}}
+
+{{:assign var="backgrounds"
+	gradient="Dégradé entre les deux couleurs"
+	white_gradient="Dégradé couleur primaire — blanc"
+	white="Blanc et couleur primaire"
+	gray="Blanc et gris"
+	all_white="Tout blanc"
+	dark="Sombre"
+}}
+
+<style type="text/css">
+#preview {
+	width: 500px;
+	height: 400px;
+	overflow: hidden;
+	float: right;
+	margin: 1em;
+	border: 2px solid #ccc;
+}
+iframe {
+	border: none;
+    transform: scale(0.5);
+    -ms-transform-origin: 0 0;
+    -moz-transform-origin: 0 0;
+    -o-transform-origin: 0 0;
+    -webkit-transform-origin: 0 0;
+    transform-origin: 0 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+</style>
+
+{{if $config.site_disabled}}
+<p class="block alert">Le site est actuellement désactivé.</p>
+{{else}}
+<div id="preview">
+	<iframe src="{{$site_url}}?dezoom=1" width="1000" height="800" scrolling="no"></iframe>
+</div>
+{{/if}}
+
+{{if $module.config.hue1 === null}}
+	{{:assign color1=$module.config.color1|or:$config.color1|or:"#999999"|css_hex_extract_hsv}}
+	{{:assign color2=$module.config.color2|or:$config.color2|or:"#333333"|css_hex_extract_hsv}}
+	{{:assign var="module.config.hue1" from="color1.h"}}
+	{{:assign var="module.config.hue2" from="color2.h"}}
+{{/if}}
+
+
+<fieldset>
+	<legend>Configuration du site web</legend>
+	<dl>
+		{{:input type="select" name="layout" label="Disposition sur grand écran" required=true default="2col" options=$layouts help="Sur petit écran (mobile), la disposition reste sur une colonne" source=$module.config}}
+		{{:input type="hue" name="hue1" label="Couleur primaire" required=false source=$module.config}}
+		{{:input type="hue" name="hue2" label="Couleur secondaire" required=false source=$module.config}}
+		{{:input type="select" name="background" options=$backgrounds label="Couleur de fond" required=true source=$module.config}}
+		<dt>Éléments à afficher sur le site</dt>
+		{{:input type="checkbox" name="show_login" value=1 label="Lien de connexion" source=$module.config default=1 help="Si coché, affiche un lien pour se connecter à la gestion de l'association."}}
+		{{:input type="checkbox" name="show_search" value=1 label="Formulaire de recherche" source=$module.config default=1}}
+		{{#module name="openings"}}
+			{{:input type="checkbox" name="show_hours" value=1 label="Horaires d'ouverture" source=$module.config default=1}}
+		{{/module}}
+		{{#module name="bookings"}}
+			{{:input type="checkbox" name="show_bookings" value=1 label="Accès aux réservations" source=$module.config default=1}}
+		{{/module}}
+		{{if $config.org_address}}
+			{{:input type="checkbox" name="show_address" value=1 label="Adresse physique" source=$module.config default=1}}
+			{{:input type="checkbox" name="show_marker" value=1 label="Lien pour ouvrir l'adresse sur une carte" source=$module.config default=1}}
+		{{/if}}
+		{{if $config.org_phone}}
+			{{:input type="checkbox" name="show_phone" value=1 label="Numéro de téléphone" source=$module.config default=1}}
+		{{/if}}
+		{{if $config.org_email}}
+			{{:input type="checkbox" name="show_email" value=1 label="Adresse e-mail" source=$module.config default=1}}
+			{{:input type="checkbox" name="contact_form" value=1 label="Formulaire de contact" source=$module.config default=0}}
+		{{/if}}
+		{{:input type="text" name="home_sticky_uri" label="Identifiant unique de la page à épingler en haut de la page d'accueil" source=$module.config help="En renseignant ici l'identifiant d'une page du site web, celle-ci restera toujours en premier sur la page d'accueil du site. C'est utile par exemple pour afficher une courte présentation de l'association en permanence."}}
+	</dl>
+</fieldset>
+
+<p class="submit">
+	{{:button type="submit" name="save" label="Enregistrer" shape="right" class="main"}}
+</p>
+
+<script type="text/javascript">
+g.onload(() => {
+	function updateColors() {
+		var color1 = $('#f_hue1').value;
+		var color2 = $('#f_hue2').value;
+		var doc = $('#preview iframe')[0].contentWindow.document;
+		doc.body.style = `--first-color: ${color1}; --second-color: ${color2};`;
+	}
+
+	$('#f_layout').onchange = (e) => {
+		var layout = e.target.value;
+		var doc = $('#preview iframe')[0].contentWindow.document;
+		doc.body.className = doc.body.className.replace(/\s*layout-\w+|$/, ' layout-' + layout);
+	}
+
+	$('#f_background').onchange = (e) => {
+		var bg = e.target.value;
+		var doc = $('#preview iframe')[0].contentWindow.document;
+		doc.body.className = doc.body.className.replace(/\s*bg-\w+|$/, ' bg-' + bg);
+	}
+
+	$('#f_hue1').addEventListener('input', updateColors);
+	$('#f_hue2').addEventListener('input', updateColors);
+});
+</script>
+
+</form>
+
+{{:admin_footer}}

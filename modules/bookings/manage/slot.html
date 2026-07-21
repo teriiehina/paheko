@@ -1,0 +1,104 @@
+{{#restrict section="users" level=$module.config.manage_access|or:'admin'}}
+{{else}}
+	{{#restrict section="config" level="admin" block=true}}
+	{{/restrict}}
+{{/restrict}}
+
+{{if $_GET.id}}
+	{{#load key=$_GET.id assign="slot"}}
+		{{:assign key=$key}}
+		{{:assign event=$event}}
+	{{else}}
+		{{:error message="Créneau introuvable"}}
+	{{/load}}
+{{else}}
+	{{:assign key=""|uuid}}
+	{{#load key=$_GET.new}}
+		{{:assign event=$key}}
+	{{else}}
+		{{:error message="Événement inconnu"}}
+	{{/load}}
+{{/if}}
+
+{{:admin_header title="Configuration d'un créneau" current="module_bookings"}}
+{{:include file="../_common.tpl" keep="frequencies,days"}}
+
+{{#form on="save"}}
+	{{if !$frequencies|keys|has:$_POST.frequency}}
+		{{:error message="Fréquence invalide"}}
+	{{/if}}
+	{{if $_POST.frequency == 'only'}}
+		{{:assign date=$_POST.date|parse_date}}
+		{{:assign day=null}}
+		{{if !$date}}
+			{{:error message="Date invalide"}}
+		{{/if}}
+	{{else}}
+		{{:assign date=null}}
+		{{:assign day=$_POST.day}}
+		{{if !$days|keys|has:$day}}
+			{{:error message="Jour invalide"}}
+		{{/if}}
+	{{/if}}
+	{{if !$_POST.open|parse_time}}
+		{{:error message="Heure de début invalide"}}
+	{{/if}}
+
+	{{:save key=$key
+		validate_schema="../slot.schema.json"
+		type="slot"
+		event=$event
+		frequency=$_POST.frequency
+		day=$day
+		date=$date|or:null
+		open=$_POST.open|parse_time
+		seats=$_POST.seats|intval
+	}}
+	{{:redirect to="./event_slots.html?id=%s&ok=1"|args:$event}}
+{{/form}}
+
+{{:form_errors}}
+
+<form method="post" action="" data-focus=1>
+	<fieldset>
+		<legend>Date et heure</legend>
+		<dl>
+			{{:input type="select" name="frequency" required=true label="Fréquence" options=$frequencies source=$slot default="every"}}
+		</dl>
+		<dl class="freq-only">
+			{{:input type="date" name="date" required=true label="Date" source=$slot}}
+		</dl>
+		<dl class="freq-every">
+			{{:input type="select" name="day" required=true label="Jour" options=$days source=$slot}}
+		</dl>
+		<dl>
+			{{:input type="time" name="open" required=true label="Heure de début" source=$slot}}
+		</dl>
+	</fieldset>
+
+	<fieldset>
+		<legend>Jauge</legend>
+		<dl>
+			{{:input type="number" name="seats" required=true min=0 step=1 label="Nombre de places disponibles" source=$slot}}
+		</dl>
+	</fieldset>
+
+	<p class="submit">
+		{{:button type="submit" shape="right" name="save" label="Enregistrer" class="main"}}
+	</p>
+
+</form>
+
+<script type="text/javascript">
+function selectFrequency () {
+	var v = $('#f_frequency').value;
+
+	g.toggle('.freq-only', v == 'only');
+	g.toggle('.freq-every', v != 'only');
+}
+
+$('#f_frequency').onchange = selectFrequency;
+selectFrequency();
+</script>
+
+{{:admin_footer}}

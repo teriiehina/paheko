@@ -1,0 +1,53 @@
+{{#load assign="claim" key=$_GET.claim}}
+{{else}}
+	{{:error message="Cette note de frais n'existe pas"}}
+{{/load}}
+
+{{#restrict section="accounting" level="write"}}
+	{{:assign is_admin=true}}
+{{else}}
+	{{:assign is_admin=false}}
+	{{if $claim.user_id !== $logged_user.id}}
+		{{:error message="L'accès à cette note de frais est interdit"}}
+	{{/if}}
+{{/restrict}}
+
+{{if $claim.status === 'draft' || $claim.status === 'cancelled'}}
+	{{:assign can_delete=true}}
+{{/if}}
+
+{{if !$is_admin && !$can_delete}}
+	{{:error message="Vous n'avez pas le droit de supprimer cette note de frais"}}
+{{/if}}
+
+{{:assign var="upload_path" value=$claim.key}}
+
+{{#form on="delete"}}
+	{{if !$can_delete && !$_POST.confirm_delete}}
+		{{:error message="La case de confirmation n'est pas cochée"}}
+	{{/if}}
+
+	{{:delete_file path=$upload_path}}
+	{{:delete type="line" claim=$claim.key}}
+	{{:delete type="claim" key=$claim.key}}
+	{{:redirect to="./"}}
+{{/form}}
+
+{{:admin_header title="Supprimer note de frais n°%d"|args:$claim.number}}
+
+{{if !$can_delete}}
+	{{:assign confirm="Cette note de frais a été acceptée, cocher cette case pour supprimer la note de frais (les écritures liées ne seront pas supprimées)"}}
+{{/if}}
+
+{{if $claim.id_transaction}}
+	{{:assign info="Attention : l'écriture #%d liée à la note de frais ne sera pas supprimée."|args:$claim.id_transaction}}
+{{/if}}
+
+{{:delete_form
+	legend="Supprimer une note de frais"
+	warning="Supprimer la note de frais n°%d ?"|args:$claim.number
+	confirm=$confirm
+	info=$info
+}}
+
+{{:admin_footer}}

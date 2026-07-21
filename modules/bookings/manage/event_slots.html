@@ -1,0 +1,69 @@
+{{#restrict section="users" level=$module.config.manage_access|or:'admin' block=true}}{{/restrict}}
+
+{{if $_GET.id}}
+	{{#load key=$_GET.id assign="event"}}{{/load}}
+{{/if}}
+
+{{if !$event.key}}
+	{{:error message="Événément introuvable"}}
+{{/if}}
+
+{{:admin_header title="%s — Créneaux"|args:$event.label current="module_bookings"}}
+
+{{:include file="../_nav.html" current="config" event=$event}}
+
+{{if $_GET.ok}}
+	<p class="block confirm">Créneaux enregistrés.</p>
+{{/if}}
+
+{{:include file="../_common.tpl" keep="frequencies,days"}}
+
+{{#load count=true type="slot" event=$event.key}}
+	{{if $count}}
+		<table class="list">
+			<tbody>
+			{{#load type="slot" event=$event.key order="$$.frequency = 'only' DESC, $$.frequency = 'this' DESC, $$.frequency DESC, $$.date, $$.day = 'monday' DESC, $$.day = 'tuesday' DESC, $$.day = 'wednesday' DESC, $$.day = 'thursday' DESC, $$.day = 'friday' DESC, $$.open ASC"}}
+				<tr>
+					<th>
+						{{if $date}}
+							{{$date|date_short}}
+						{{else}}
+							{{:assign var="f" from="frequencies.%s"|args:$frequency}}
+							{{:assign var="d" from="days.%s"|args:$day}}
+							{{$f}}
+							{{$d}}
+						{{/if}}
+						à {{$open}}
+					</th>
+					<td>
+						{{$seats}} places
+					</td>
+					<td class="actions">
+						{{:linkbutton label="Modifier" href="slot.html?id=%s"|args:$key shape="edit" target="_dialog"}}
+						{{:linkbutton label="Supprimer" href="slot_delete.html?id=%s"|args:$key shape="delete" target="_dialog"}}
+					</td>
+				</tr>
+			{{/load}}
+			</tbody>
+		</table>
+
+	{{else}}
+
+		<p class="alert block">
+			Il n'y a aucun créneau configuré.<br />
+			{{:linkbutton shape="plus" label="Nouveau créneau" href="slot.html?new=%s"|args:$event.key target="_dialog"}}
+		</p>
+
+	{{/if}}
+{{/load}}
+
+<div class="help block">
+	<h3>Accès la réservation de créneaux pour cet événement</h3>
+	<p>Les non-membres pourront réserver un créneau de cet événement directement via l'adresse suivante :<br />
+		{{:assign url="%s?event=%s"|args:$module.url:$event.key}}
+		{{:input copy=true name="url" type="url" readonly=true default=$url size=$url|strlen}}
+	</p>
+</div>
+
+
+{{:admin_footer}}

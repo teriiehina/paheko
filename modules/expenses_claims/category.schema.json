@@ -1,0 +1,32 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"properties": {
+		"type": {
+			"type": "string",
+			"enum": ["category"]
+		},
+		"label": {
+			"type": "string",
+			"description": "Nom de la catégorie"
+		},
+		"notes": {
+			"type": ["string", "null"],
+			"description": "Instructions"
+		},
+		"account": {
+			"type": ["object", "null"],
+			"description": "Code comptable"
+		},
+		"price": {
+			"type": ["integer", "null"],
+			"description": "Prix unitaire"
+		},
+		"expense_type": {
+			"type": "string",
+			"description": "Type de dépense",
+			"enum": ["other", "km_free", "km_vehicle", "flat_rate"]
+		}
+	},
+	"required": ["type", "label", "notes", "account", "expense_type"]
+}

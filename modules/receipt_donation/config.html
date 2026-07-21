@@ -1,0 +1,50 @@
+{{if $module.config.accounts|gettype === 'string'}}
+	{{:include file="./_upgrade.tpl" keep="module.config.accounts"}}
+{{/if}}
+
+{{#form on="save"}}
+	{{:save key="config"
+		accounts=$_POST.accounts|arrayval
+		email_subject=$_POST.email_subject|trim
+		email_body=$_POST.email_body|trim
+	}}
+	{{:redirect to="?ok=1"}}
+{{/form}}
+
+{{:admin_header title="Configuration du reçu de don"}}
+
+{{:form_errors}}
+
+{{if $_GET.ok}}
+	<p class="block confirm">Configuration enregistrée.</p>
+{{/if}}
+
+<form method="post" action="">
+
+<fieldset>
+	<legend>Configuration du modèle de reçu</legend>
+	<dl>
+		{{:assign var="default_account.754" value="754 — Ressources liées à la générosité du public"}}
+		{{:input required=false name="accounts" multiple=true target="!acc/charts/accounts/selector.php?types=6&key=code" type="list" label="Comptes éligibles aux reçus de don" source=$module.config default=$default_account}}
+		<dd class="help">
+			Le reçu de don sera proposé, <strong>en dessous de la fiche de l'écriture</strong>, pour chaque compte sélectionné et ses sous-comptes. Le montant du don ne prendra en compte que les crédits fait sur ces comptes.<br />
+			Laisser vide pour que le reçu de don soit proposé quel que soit le compte.
+		</dd>
+	</dl>
+</fieldset>
+
+<fieldset>
+	<legend>Message par défaut lors de l'envoi du reçu par e-mail</legend>
+	<dl>
+		{{:input name="email_subject" type="text" label="Sujet du message" required=true source=$module.config default="Votre reçu de don"}}
+		{{:input name="email_body" type="textarea" label="Corps du message" cols="70" rows="7" required=true source=$module.config default="Bonjour !\n\nVeuillez trouver ci-joint votre reçu de don au format PDF."}}
+	</dl>
+</fieldset>
+
+<p class="submit">
+	{{:button type="submit" name="save" label="Enregistrer" shape="right" class="main"}}
+</p>
+
+</form>
+
+{{:admin_footer}}

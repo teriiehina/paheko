@@ -1,0 +1,25 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"description": "Objet de l'entrée ou sortie (abaque : électroménager, meuble, vélo, objet...)",
+	"properties": {
+		"type": {
+			"type": "string",
+			"enum": ["object"]
+		},
+		"label": {
+			"description": "Libellé",
+			"type": "string"
+		},
+		"weight": {
+			"description": "Poids par défaut",
+			"type": "integer"
+		},
+		"target": {
+			"description": "Mouvement",
+			"type": "string",
+			"enum": ["entry", "exit"]
+		}
+	},
+	"required": ["type", "label", "weight", "target"]
+}

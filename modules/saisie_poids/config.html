@@ -1,0 +1,135 @@
+{{:include file="_init.tpl"}}
+
+{{#form on="save"}}
+	{{:save key="config"
+		velos_entry=$_POST.velos_entry|arrayval|filter
+		velos_exit=$_POST.velos_exit|arrayval|filter
+		caisse_exit=$_POST.caisse_exit|arrayval|filter
+	}}
+	{{:redirect to="?saved=1"}}
+{{/form}}
+
+{{:admin_header title="Connexion avec les extensions" current="module_saisie_poids"}}
+
+{{:include file="_nav.html" current="config"}}
+
+{{if $_GET.saved}}
+	<p class="block confirm">La configuration a été enregistrée.</p>
+{{/if}}
+
+{{#load type="category" order="$$.label COLLATE U_NOCASE" target="entry"}}
+	{{:assign var="entry_categories."|cat:$key value=$label}}
+{{/load}}
+
+{{#load type="category" order="$$.label COLLATE U_NOCASE" target="exit"}}
+	{{:assign var="exit_categories."|cat:$key value=$label}}
+{{/load}}
+
+{{:form_errors}}
+
+<form method="post" action="">
+
+{{#extension name="stock_velos"}}
+{{:assign has_config=true}}
+<fieldset>
+	<legend>Import : {{$label}}</legend>
+	<p class="help">
+		Associer ici une provenance de l'extension <em>"{{$label}}"</em> (colonne de gauche) à une provenance de l'extension <em>"Saisie au poids"</em> (colonne de droite).<br />
+		Pour chaque association indiquée, le poids du vélo dans le stock de vélo pourra être importé dans cette extension.
+	</p>
+	{{:assign var="defaults" 0='Achat' 1='Don' 2='Rachat' 3='Récupération' 4='Partenariat'}}
+	{{:assign list=$config.source|or:$defaults}}
+	<table class="list auto">
+		<caption>Association de la provenance</caption>
+		<thead>
+			<tr>
+				<th>{{$label}}</th>
+				<td>Saisie au poids</td>
+			</tr>
+		</thead>
+		<tbody>
+		{{#foreach from=$list item="option"}}
+			{{:assign key=$option|md5}}
+			{{:assign var="selected" from="module.config.velos_entry.%s"|args:$key}}
+			<tr>
+				<th>{{$option}}</th>
+				<td>{{:input type="select" options=$entry_categories default_empty="— Ne pas importer —" required=false name="velos_entry[%s]"|args:$key default=$selected}}</td>
+			</tr>
+		{{/foreach}}
+		</tbody>
+	</table>
+	{{if $exit_categories|count}}
+		<p class="help">
+			Associer ici un motif de sortie de l'extension <em>"{{$label}}"</em> (colonne de gauche) à un motif de sortie de l'extension <em>"Saisie au poids"</em> (colonne de droite).<br />
+			Pour chaque association indiquée, le poids du vélo dans le stock de vélo pourra être importé dans cette extension.
+		</p>
+		{{:assign var="defaults" 0='Démonté' 1='Vendu' 2='Vendu en bourse' 3='Jeté'}}
+		{{:assign list=$config.raison_sortie|or:$defaults}}
+		<table class="list auto">
+			<caption>Association du motif de sortie</caption>
+			<thead>
+				<tr>
+					<th>{{$label}}</th>
+					<td>Saisie au poids</td>
+				</tr>
+			</thead>
+			<tbody>
+			{{#foreach from=$list item="option"}}
+				{{:assign key=$option|md5}}
+				{{:assign var="selected" from="module.config.velos_exit.%s"|args:$key}}
+				<tr>
+					<th>{{$option}}</th>
+					<td>{{:input type="select" options=$exit_categories default_empty="— Ne pas importer —" required=false name="velos_exit[%s]"|args:$key default=$selected}}</td>
+				</tr>
+			{{/foreach}}
+			</tbody>
+		</table>
+	{{/if}}
+</fieldset>
+{{/extension}}
+
+{{if $exit_categories|count}}
+	{{#extension name="caisse"}}
+	{{:assign has_config=true}}
+	<fieldset>
+		<legend>Import des ventes de la caisse</legend>
+		<p class="help">
+			Associer ici une catégorie de l'extension <em>"{{$label}}"</em> (colonne de gauche) à un motif de sortie de l'extension <em>"Saisie au poids"</em> (colonne de droite).<br />
+			Pour chaque association indiquée, le poids indiqué lors de la vente pourra être importé dans cette extension.
+		</p>
+
+		{{#extension name="stock_velos"}}
+		<p class="alert block">Attention à ne pas créer de doublon avec les sorties de la gestion de stock de vélo.</p>
+		{{/extension}}
+		<table class="list auto">
+			<thead>
+				<tr>
+					<th>Catégorie de produit</th>
+					<td>Motif de sortie</td>
+				</tr>
+			</thead>
+			<tbody>
+			{{#select id, name FROM plugin_pos_categories ORDER BY name COLLATE U_NOCASE}}
+				{{:assign var="selected" from="module.config.caisse_exit.%s"|args:$id}}
+				<tr>
+					<th>{{$name}}</th>
+					<td>{{:input type="select" options=$exit_categories default_empty="— Ne pas importer —" required=false name="caisse_exit[%s]"|args:$id default=$selected}}</td>
+				</tr>
+			{{/select}}
+			</tbody>
+		</table>
+	</fieldset>
+	{{/extension}}
+{{/if}}
+
+{{if $has_config}}
+	<p class="submit">
+		{{:button type="submit" shape="right" label="Enregistrer" name="save" class="main"}}
+	</p>
+{{else}}
+	<p class="help">Cette page permet de configurer le lien avec les extensions "Caisse" et "Gestion du stock de vélo" si elles sont activées. Mais elles sont désactivées.</p>
+{{/if}}
+
+</form>
+
+{{:admin_footer}}

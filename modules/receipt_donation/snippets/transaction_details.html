@@ -1,0 +1,36 @@
+{{if $module.config.accounts === null}}
+	{{:assign var="module.config.accounts.754" value="754"}}
+{{elseif $module.config.accounts|gettype === 'string'}}
+	{{:include file="../_upgrade.tpl" keep="module.config.accounts"}}
+{{/if}}
+
+{{#foreach from=$transaction_lines item="line"}}
+	{{if !$line.credit}}
+		{{:continue}}
+	{{/if}}
+
+	{{#foreach from=$module.config.accounts key="code"}}
+		{{if $line.account_code|strpos:$code === 0}}
+			{{:assign show=true}}
+			{{:break}}
+		{{/if}}
+	{{/foreach}}
+
+	{{if $show}}
+		{{:break}}
+	{{/if}}
+{{/foreach}}
+
+{{if $show}}
+	<h2 class="ruler">{{$module.label}}</h2>
+	<p class="actions-center">
+		{{:linkbutton href="%s?id=%d"|args:$module.url:$transaction.id target="_dialog" label="Prévisualiser" shape="eye"}}
+		{{if $pdf_enabled}}
+			{{:linkbutton href="%s?id=%d&print=pdf"|args:$module.url:$transaction.id label="Télécharger en PDF" shape="download"}}
+		{{/if}}
+		{{:linkbutton href="%s?id=%d&print=yes"|args:$module.url:$transaction.id target="_blank" label="Imprimer" shape="print"}}
+		{{if $pdf_enabled}}
+			{{:linkbutton href="%ssend.html?id=%d"|args:$module.url:$transaction.id target="_dialog" label="Envoyer" shape="mail"}}
+		{{/if}}
+	</p>
+{{/if}}

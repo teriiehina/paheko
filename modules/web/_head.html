@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="utf-8" />
+	<title>{{if $title}}{{$title}} — {{/if}}{{$config.org_name}}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, target-densitydpi=device-dpi" />
+	<style type="text/css">
+	:root {
+		{{if $module.config.hue1 === null}}
+			{{:assign color1=$module.config.color1|or:$config.color1|or:"#999999"|css_hex_extract_hsv}}
+			{{:assign color2=$module.config.color2|or:$config.color2|or:"#333333"|css_hex_extract_hsv}}
+			{{:assign var="module.config.hue1" from="color1.h"}}
+			{{:assign var="module.config.hue2" from="color2.h"}}
+		{{/if}}
+
+		--first-color: {{$module.config.hue1}};
+		--second-color: {{$module.config.hue2}};
+	}
+	</style>
+	<link rel="stylesheet" type="text/css" href="{{$root_uri}}default.css?h={{$version_hash}}" media="screen,projection,handheld" />
+	<link rel="stylesheet" type="text/css" href="{{$root_uri}}content.css?h={{$version_hash}}" media="all" />
+	<link rel="stylesheet" type="text/css" href="{{$root_uri}}print.css?h={{$version_hash}}" media="print" />
+	<link rel="alternate" type="application/atom+xml" title="{{$config.org_name}}" href="{{$root_uri}}atom.xml" />
+	<link rel="icon" type="image/png" href="{{$config.files.favicon}}" />
+	<meta property="og:title" content="{{if $title}}{{$title}} — {{/if}}{{$config.org_name}}" />
+	<meta property="og:site_name" content="{{$config.org_name}}" />
+
+	{{if $config.files.logo}}
+		<meta property="og:image" content="{{$config.files.logo}}" />
+	{{/if}}
+</head>
+
+<body class="layout-{{$module.config.layout|or:"2col"}} bg-{{$module.config.background|or:"white"}}">
+
+{{if $logged_user}}
+	<nav class="admin">
+		{{:linkbutton href="!" shape="user" label="Administration"}}
+		{{#restrict section="web" level="write"}}
+			{{if $page.id}}
+				{{:linkbutton href="!web/edit.php?id=%d"|args:$page.id shape="edit" label="Modifier cette page"}}
+				{{:linkbutton href="!web/?id=%d"|args:$page.id shape="eye" label="Gérer cette page"}}
+			{{else}}
+				{{:linkbutton href="!web/" shape="edit" label="Gérer le site web"}}
+			{{/if}}
+		{{/restrict}}
+	</nav>
+{{elseif $module.config.show_login !== false}}
+	<nav class="admin login">
+		{{:linkbutton href="!" label="Connexion"}}
+	</nav>
+{{/if}}
+
+<main>
+
+<header class="main{{if $home}} home{{/if}}">
+	<h1>
+		<a href="{{$root_uri}}">
+		{{if $config.files.logo}}
+			<img src="{{$config.files.logo}}" alt="{{$config.org_name}}" class="logo" />
+		{{else}}
+			<span>{{$config.org_name}}</span>
+		{{/if}}
+		</a>
+	</h1>
+
+	{{if $config.org_address || $config.org_phone || $config.org_email}}
+		<article class="contacts">
+			{{if $config.files.logo}}
+			<h3>{{$config.org_name}}</h3>
+			{{/if}}
+			{{if $config.org_address && $module.config.show_address !== false}}
+				<h4>
+				{{if $module.config.show_marker !== false}}
+					{{* Lien permettant d'ouvrir l'adresse dans l'app de cartographie du téléphone, ou OpenStreetMap sinon *}}
+					<a href="https://www.openstreetmap.org/search?query={{$config.org_address|replace:"\n":", "|url_encode}}" target="_blank" class="map" onclick="var ua = navigator.userAgent, q = encodeURIComponent(this.innerText.replace(/\n/, ', ')); if (ua.match(/Android/i)) { return !window.open('https://maps.google.com/?q=' + q); } else if (!ua.match(/iPod|iPad|iPhone/i)) { return !window.open('https://maps.apple.com/?q=' + q); }">
+					<svg viewBox="0 0 384 512" xmlns="http://www.w3.org/2000/svg"><path d="m172.268 501.67c-145.298-210.639-172.268-232.257-172.268-309.67 0-106.039 85.961-192 192-192s192 85.961 192 192c0 77.413-26.97 99.031-172.268 309.67-9.535 13.774-29.93 13.773-39.464 0zm19.732-229.67c44.183 0 80-35.817 80-80s-35.817-80-80-80-80 35.817-80 80 35.817 80 80 80z"/></svg>
+					<span>{{$config.org_address|escape|nl2br}}</span>
+					</a>
+				{{else}}
+					{{$config.org_address|escape|nl2br}}
+				{{/if}}
+				</h4>
+			{{/if}}
+			{{if $config.org_phone && $module.config.show_phone !== false}}
+				<h5>{{$config.org_phone|raw|protect_contact:'tel'}}</h5>
+			{{/if}}
+			{{if $config.org_email && $module.config.show_email !== false}}
+				<h5>{{$config.org_email|raw|protect_contact}}</h5>
+			{{/if}}
+		</article>
+	{{/if}}
+</header>
+
+<nav class="main">
+
+{{if $module.config.show_bookings !== false}}
+	{{#module name="bookings"}}
+		<p class="booking-btn">
+			<a href="{{$public_url}}" target="_blank"><span></span><b>Réserver</b></a>
+		</p>
+	{{/module}}
+{{/if}}
+
+	{{if $module.config.show_search !== false || $_GET.search}}
+	<form method="get" action="{{ $root_uri }}search.html" class="search-widget">
+		<p>
+			<input type="search" name="search" placeholder="Rechercher…" value="{{ $_GET.search }}" />
+			<input type="submit" value="&rarr;" title="Lancer la recherche" />
+		</p>
+	</form>
+	{{/if}}
+
+	<ul class="subcategories">
+	{{#categories parent=null order="title" private=true}}
+		<li><a href="{{$url}}" {{if $url == $.url}}class="current"{{/if}}>{{ $title }}</a></li>
+	{{/categories}}
+	{{if $module.config.contact_form === true}}
+		<li><a href="{{$site_url}}contact.html" {{if $contact_form}}class="current"{{/if}}>Contact</a></li>
+	{{/if}}
+	</ul>
+
+	{{if $module.config.show_hours !== false}}
+		{{#module name="openings"}}
+		<article class="opening-hours">
+			{{:include file="/openings/_all.html"}}
+		</article>
+		{{/module}}
+	{{/if}}
+
+</nav>
+
+<section class="page">

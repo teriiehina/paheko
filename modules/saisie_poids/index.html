@@ -1,0 +1,137 @@
+{{if $module.config.disable_input}}
+	{{:redirect to="stats.html"}}
+{{/if}}
+
+{{if $_GET.type === 'exit'}}
+	{{:assign type="exit"}}
+{{else}}
+	{{:assign type="entry"}}
+{{/if}}
+
+{{:include file="./_init.tpl"}}
+
+{{#load type="category" order="$$.label COLLATE U_NOCASE" target=$type}}
+	{{:assign var="categories."|cat:$key label=$label ecologic=$ecologic}}
+{{/load}}
+
+{{#load type="object" order="$$.label COLLATE U_NOCASE" target=$type}}
+	{{:assign var="objects."|cat:$key label=$label weight=$weight}}
+{{/load}}
+
+{{#form on="save"}}
+	{{:assign var="rows" value=$_POST.new|array_transpose}}
+
+	{{if !$rows|count}}
+		{{:error message="Aucune ligne fournie"}}
+	{{/if}}
+
+	{{#foreach from=$rows item="row"}}
+		{{:assign weight=$row.weight|weightval}}
+		{{:assign total="%d*%d"|math:$weight:$row.qty}}
+
+		{{:assign var="category" from="categories.%s"|args:$row.category}}
+		{{:assign var="object" from="objects.%s"|args:$row.object}}
+
+		{{if !$category}}
+			{{:error message="La catégorie ne peut rester vide."}}
+		{{elseif !$object}}
+			{{:error message="Le type d'objet ne peut rester vide."}}
+		{{elseif $total <= 0}}
+			{{:error message="Le poids ou la quantité sont invalides."}}
+		{{/if}}
+
+		{{if $type === "entry"}}
+			{{:save key="uuid"
+				validate_schema="./entry.schema.json"
+				type=$type
+				object=$object.label
+				category=$category.label
+				ecologic=$category.ecologic
+				weight=$weight
+				qty=$row.qty|intval
+				total_weight=$total
+				date=$now|date:'Y-m-d H:i:s'
+			}}
+		{{else}}
+			{{:save key="uuid"
+				validate_schema="./exit.schema.json"
+				type=$type
+				object=$object.label
+				category=$category.label
+				ecologic=$category.ecologic
+				weight=$weight
+				qty=$row.qty|intval
+				total_weight=$total
+				date=$now|date:'Y-m-d H:i:s'
+			}}
+		{{/if}}
+	{{/foreach}}
+
+	{{:redirect to="./?saved=1"}}
+{{/form}}
+
+{{:admin_header title="Saisie au poids" current="module_saisie_poids"}}
+
+{{:include file="_nav.html" current=$type}}
+
+{{if $_GET.saved}}
+	<p class="block confirm">La saisie a été enregistrée.</p>
+{{/if}}
+
+{{:form_errors}}
+
+{{if !$_POST}}
+	{{:assign var="rows." weight=0}}
+{{/if}}
+
+{{if !$objects|count}}
+	<p class="block error">Aucun type d'objet n'a été configuré.</p>
+{{elseif !$categories|count}}
+	<p class="block error">Aucune catégorie n'a été configurée.</p>
+{{else}}
+	<form method="post" action="" data-focus="1">
+
+	<table class="list">
+		<thead>
+			<tr>
+				<td>Objet</td>
+				<td>Poids unitaire (kg)</td>
+				<td>Quantité</td>
+				<td>Poids total (kg)</td>
+				<td>{{if $type === 'entry'}}Provenance{{else}}Motif de sortie{{/if}}</td>
+				<td class="actions"></td>
+			</tr>
+		</thead>
+		<tbody>
+			{{#foreach from=$rows item="row"}}
+			<tr>
+				<td>{{:input type="select" name="new[object][]" options=$objects default=$row.object required=true}}</td>
+				<td>{{:input type="number" class="weight" name="new[weight][]" default=$row.weight step="0.001" required=true min=0}}</td>
+				<td>{{:input type="number" step=1 name="new[qty][]" default=$row.qty|or:1 required=true size=2}}</td>
+				<td class="num total"></td>
+				<td>{{:input type="select" name="new[category][]" default=$row.category options=$categories required=true}}</td>
+				<td class="actions">
+					{{:button shape="minus" title="Enlever cette ligne" class="remove"}}
+				</td>
+			</tr>
+			{{/foreach}}
+		</tbody>
+	</table>
+
+	<p class="actions">
+		{{:button shape="plus" label="Ajouter une ligne" class="add"}}
+	</p>
+
+	<p class="submit">
+		{{:button type="submit" shape="right" label="Enregistrer" name="save" class="main"}}
+	</p>
+
+	</form>
+{{/if}}
+
+<script type="text/javascript">
+var objects = {{$objects|json_encode|raw}};
+</script>
+<script type="text/javascript" src="table.js"></script>
+
+{{:admin_footer}}

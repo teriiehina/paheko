@@ -1,0 +1,123 @@
+{{#restrict section="accounting" level="write" block=true}}{{/restrict}}
+
+{{#foreach from=$_POST.claims item="key"}}
+	{{#load assign="claim" key=$key}}
+	{{else}}
+		{{:error message="Cette note de frais n'existe pas : %s"|args:$key}}
+	{{/load}}
+
+	{{if $claim.status !== 'payable'}}
+		{{:error message="Cette note de frais n'est pas en attente de paiement: %s"|args:$claim.status}}
+	{{/if}}
+
+	{{#transactions id=$claim.id_transaction}}
+		{{:assign total="%d+%d"|math:$total:$debit}}
+		{{:assign default_year=$id_year}}
+		{{#transaction_lines transaction=$id where="credit > 0" limit=1}}
+			{{:assign debit_account=$account_code}}
+		{{/transaction_lines}}
+	{{/transactions}}
+
+	{{if $claim.payments|count}}
+		{{#transactions id=$claim.payments}}
+			{{:assign total="%d-%d"|math:$total:$credit}}
+		{{/transactions}}
+	{{/if}}
+
+	{{:assign var="linked_users." value=$claim.user_id}}
+	{{:assign var="linked_transactions." value=$claim.id_transaction}}
+	{{:assign var="claims.%s"|args:$claim.key value=$claim}}
+	{{:assign var="claims_numbers." value=$claim.number}}
+{{/foreach}}
+
+{{:assign claims_numbers_str=$claims_numbers|implode:', '}}
+
+{{#form on="save"}}
+	{{:assign var="lines." credit=$total|money_raw account=$_POST.account|keys|key:0}}
+	{{:assign var="lines." debit=$total|money_raw account=$debit_account}}
+	{{:api
+		method="POST"
+		path="accounting/transaction"
+		assign="result"
+
+		id_year=$_POST.id_year|intval
+		type="advanced"
+		date=$_POST.date
+		label=$_POST.label|trim
+		reference="Remboursement NDF (%s)"|args:$claims_numbers_str
+		linked_users=$linked_users
+		lines=$lines
+		linked_transactions=$linked_transactions
+	}}
+
+	{{#foreach from=$claims item="claim"}}
+		{{:assign claim=$claim}} {{* This line is required to overwrite the claim variable stored in the root level *}}
+		{{:assign var="claim.payments." value=$result.id}}
+		{{:save
+			validate_schema="./claim.schema.json"
+			key=$claim.key
+			payments=$claim.payments
+			status="paid"
+		}}
+	{{/foreach}}
+
+
+	{{:redirect to="./"}}
+{{/form}}
+
+{{#years closed=false}}
+	{{:assign var="open_years.%d"|args:$id value=$label}}
+	{{if $start_date <= $now && $end_date >= $now}}
+		{{:assign best_year=$id}}
+	{{/if}}
+{{/years}}
+
+{{if !$open_years|count}}
+	{{:error message="Aucun exercice n'est ouvert, il n'est pas possible de créer une écriture et donc d'accepter cette note de frais."}}
+{{/if}}
+
+{{if !$default_year|key_in:$open_years}}
+	{{:assign default_year=null}}
+{{/if}}
+
+{{:assign default_year=$default_year|or:$best_year}}
+
+{{:admin_header title="Nouveau paiement"}}
+
+{{:form_errors}}
+
+<form method="post" action="">
+	<fieldset>
+		<legend>Nouveau paiement de remboursement</legend>
+		<dl>
+			<dt>Notes de frais</dt>
+			{{#foreach from=$claims item="claim"}}
+				<dd>N°{{$claim.number}} – {{$claim.label}} {{:input type="hidden" name="claims[]" default=$claim.key}}</dd>
+			{{/foreach}}
+			{{:input type="select" default=$default_year name="id_year" label="Exercice" required=true options=$open_years}}
+			{{:input type="date" default=$now name="date" label="Date" required=true}}
+			{{:input type="text" default="Remboursement des notes de frais N°%s"|args:$claims_numbers_str name="label" label="Libellé" required=true}}
+			{{:input type="money" name="amount" label="Montant" default=$total readonly=true required=true}}
+			{{:input type="list" name="account" label="Compte de paiement" required=true target="!acc/charts/accounts/selector.php?types=1|2|3&key=code&id_year=%d"|args:$default_year}}
+		</dl>
+	</fieldset>
+	<p class="submit">
+		{{:button type="submit" shape="right" label="Enregistrer" name="save" class="main"}}
+	</p>
+</form>
+
+
+<script type="text/javascript">
+function toggleYearForSelector()
+{
+	$('.input-list button').forEach((e) => {
+		e.value = e.value.replace(/year=\d+/, 'year=' + y.value);
+	});
+}
+
+var y = $('#f_id_year')
+
+y.onchange = toggleYearForSelector;
+</script>
+
+{{:admin_footer}}

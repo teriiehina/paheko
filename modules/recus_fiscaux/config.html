@@ -1,0 +1,197 @@
+{{:admin_header title="Configuration des reçus fiscaux"}}
+
+{{:include file="./_config_default.tpl" keep="module.config,types_asso"}}
+
+{{#form on="save"}}
+	{{if $_POST.type_asso !== 'syndicat'}}
+		{{if !$_POST.objet_asso|trim}}
+			{{:error message="L'objet de l'association n'a pas été renseigné."}}
+		{{elseif !$_POST.numero_asso}}
+			{{:error message="Le numéro SIREN ou RNA n'a pas été renseigné."}}
+		{{elseif !$_POST.art200|boolval && !$_POST.art238bis|boolval && !$_POST.art978|boolval}}
+			{{:error message="Merci de cocher au moins un des articles donnant éligibilité aux réductions d'impôt."}}
+		{{/if}}
+	{{/if}}
+
+	{{if !$_POST.comptes_don|count}}
+		{{:error message="Aucun compte de don éligible aux reçus n'a été renseigné."}}
+	{{elseif !$_POST.comptes_especes|count}}
+		{{:error message="Aucun compte d'espèces n'a été renseigné."}}
+	{{elseif !$_POST.comptes_cheques|count}}
+		{{:error message="Aucun compte de chèques n'a été renseigné."}}
+	{{elseif !$_POST.champs_adresse|count}}
+		{{:error message="Aucun champ d'adresse n'a été coché."}}
+	{{/if}}
+
+	{{:save key="config"
+		validate_schema="./config.schema.json"
+		numero_asso=$_POST.numero_asso|strval|trim
+		objet_asso=$_POST.objet_asso|strval|trim
+		type_asso=$_POST.type_asso|strval|trim
+		comptes_don=$_POST.comptes_don|arrayval
+		comptes_don_nature=$_POST.comptes_don_nature|arrayval|or:null
+		comptes_don_abandon_frais=$_POST.comptes_don_abandon_frais|arrayval|or:null
+		comptes_especes=$_POST.comptes_especes|arrayval
+		comptes_cheques=$_POST.comptes_cheques|arrayval
+		art200=$_POST.art200|boolval
+		art238bis=$_POST.art238bis|boolval
+		art978=$_POST.art978|boolval
+		champs_adresse=$_POST.champs_adresse|arrayval
+		champ_entreprise_numero=$_POST.champ_entreprise_numero|strval|trim|or:null
+		champ_entreprise_forme=$_POST.champ_entreprise_forme|strval|trim|or:null
+		email_subject=$_POST.email_subject|trim
+		email_body=$_POST.email_body|trim
+	}}
+	{{:redirect to="?ok=1"}}
+{{/form}}
+
+{{if !$dialog}}
+	<nav class="tabs">
+		{{:linkbutton shape="left" href="./" label="Gestion des reçus"}}
+	</nav>
+{{/if}}
+
+{{if $_GET.msg == 'MISSING'}}
+<p class="error block">
+	Pour pouvoir générer des reçus, il faut renseigner le numéro SIREN ou RNA, l'objet de l'association et cocher un des articles de loi ouvrant l'éligibilité à la réduction d'impôt.
+</p>
+{{elseif $_GET.msg == 'MISSING_NUMBER'}}
+<p class="error block">
+	Merci de bien vouloir renseigner le numéro SIREN ou RNA de l'association.
+</p>
+{{/if}}
+
+{{:form_errors}}
+
+{{if $_GET.ok}}
+	<p class="block confirm">Configuration enregistrée.</p>
+{{/if}}
+
+<form method="post" action="">
+
+<p class="help">Toute modification ne s'appliquera qu'aux reçus créés, pas aux reçus existants, qui ne peuvent être modifiés pour des raisons légales.</p>
+
+<fieldset>
+	<legend>Informations sur l'association</legend>
+	<dl>
+		<dt><label for="f_type_asso_defaut">Type d'organisme</label> <b>(obligatoire)</b></dt>
+		{{#foreach from=$types_asso key="type"}}
+			{{:input type="radio-btn" required=true name="type_asso" value=$type label=$label help="Réduction de %s"|args:$help source=$module.config}}
+		{{/foreach}}
+
+		<dd class="help">Note : les réductions ne sont données qu'à titre indicatif. Il est possible que ces taux aient changé, ou soient différents pour les entreprises ou l'impôt sur la fortune.</dd>
+	</dl>
+
+	<dl class="type-asso">
+		<dt><label for="f_art200_1">Réductions d'impôt éligibles</label> <b>(obligatoire)</b></dt>
+
+		{{:input type="checkbox" name="art200" value="1" source=$module.config label="Article 200" help="Réduction d'impôt pour les particuliers"}}
+		{{:input type="checkbox" name="art238bis" value="1" source=$module.config label="Article 238 bis" help="Pour les entreprises"}}
+		{{:input type="checkbox" name="art978" value="1" source=$module.config label="Article 978" help="Pour les personnes soumises à l'impôt sur la fortune immobilière"}}
+
+		{{:input required=true name="numero_asso" type="text" label="Numéro SIREN ou RNA de l'association" source=$module.config}}
+
+		{{:input required=true name="objet_asso" type="textarea" label="Objet de l'association" source=$module.config cols="70" rows="4" help="Inscrire ici l'objet de l'association, conformément aux statuts."}}
+	</dl>
+</fieldset>
+
+<fieldset>
+	<legend>Détection automatique selon les comptes utilisés</legend>
+	<dl>
+		{{:input type="list" required=true name="comptes_don" label="Comptes correspondants aux dons" source=$module.config target="!acc/charts/accounts/selector.php?types=6&key=code" multiple=true}}
+		<dd class="help">
+			Généralement <tt>754</tt>. Utiliser pour identifier quelles écritures sont éligibles aux reçus.
+		</dd>
+	</dl>
+
+	<dl class="type-asso">
+		{{:input type="list" required=false name="comptes_don_abandon_frais" label="Comptes correspondants aux abandons de frais des bénévoles" source=$module.config target="!acc/charts/accounts/selector.php?types=6&key=code" multiple=true}}
+		<dd class="help">
+			Généralement <tt>75412</tt>. Utilisé pour cocher automatiquement la bonne case dans le reçu.
+		</dd>
+
+		{{:input type="list" required=false name="comptes_don_nature" label="Comptes correspondants aux dons en nature" source=$module.config target="!acc/charts/accounts/selector.php?types=8&key=code" multiple=true}}
+		<dd class="help">
+			Généralement <tt>870</tt>. Utilisé pour cocher automatiquement la bonne case dans le reçu.
+		</dd>
+	</dl>
+
+	<dl>
+		{{:input required=true name="comptes_especes" type="list" multiple=true label="Comptes de caisse" source=$module.config target="!acc/charts/accounts/selector.php?types=2&key=code"}}
+		<dd class="help">
+			Par exemple <tt>530</tt>. Utilisé pour cocher automatiquement la bonne case dans le reçu.
+		</dd>
+		{{:input required=true name="comptes_cheques" type="list" multiple=true label="Comptes pour les chèques" source=$module.config target="!acc/charts/accounts/selector.php?types=3&key=code"}}
+		<dd class="help">
+			Par exemple <tt>5112</tt>. Utilisé pour cocher automatiquement la bonne case dans le reçu.
+		</dd>
+	</dl>
+</fieldset>
+
+<fieldset>
+	<legend>Configuration des champs</legend>
+	<dl>
+		<dt>Champs à utiliser pour l'adresse du reçu&nbsp;:</dt>
+		{{#select name, label FROM config_users_fields WHERE type NOT IN ('file', 'password', 'virtual', 'multiple', 'checkbox', 'date', 'datetime') ORDER BY sort_order}}
+			{{:assign var="fields.%s"|args:$name value=$label}}
+			{{:assign var="checked" from="module.config.champs_adresse.%s"|args:$name}}
+			<dd>{{:input type="checkbox" name="champs_adresse[%s]"|args:$name value=$name label=$label source=$module.config default=$checked}}</dd>
+		{{/select}}
+	</dl>
+</fieldset>
+
+<fieldset class="entreprise type-asso">
+	<legend>Gestion des reçus pour entreprises</legend>
+	<p class="help">Depuis 2023, les entreprises doivent faire l'objet d'un reçu différent. Si l'entreprise a fait un don en nature, le reçu doit être renseigné manuellement.<br />
+		Si vous indiquez ci-dessous les champs SIREN et forme juridique de l'entreprise, les fiches membres disposant de ces informations seront traitées conformément au nouveau reçu.<br />
+		Dans le cas contraire toutes les fiches membres seront traitées comme étant des particuliers.
+	</p>
+	<dl>
+		{{:input type="select" name="champ_entreprise_numero" default_empty="— Aucun —" label="Champ du numéro SIREN de l'entreprise" required=false options=$fields source=$module.config}}
+		{{:input type="select" name="champ_entreprise_forme" default_empty="— Aucun —" label="Champ de la forme juridique de l'entreprise" required=false options=$fields source=$module.config}}
+	</dl>
+</fieldset>
+
+<fieldset>
+	<legend>Message par défaut lors de l'envoi du reçu par e-mail</legend>
+	<dl>
+		{{:input name="email_subject" type="text" label="Sujet du message" required=true source=$module.config}}
+		{{:input name="email_body" type="textarea" label="Corps du message" cols="70" rows="7" required=true source=$module.config}}
+	</dl>
+</fieldset>
+
+
+<p class="submit">
+	{{:button type="submit" name="save" label="Enregistrer" shape="right" class="main"}}
+</p>
+
+</form>
+
+<script type="text/javascript">
+var art238bis = $('#f_art238bis_1');
+
+function selectEntreprise() {
+	g.toggle('.entreprise', art238bis.checked);
+}
+
+art238bis.onchange = selectEntreprise;
+
+var type = document.forms[0].type_asso;
+
+function selectType() {
+	if (type.value !== 'syndicat') {
+		g.toggle('.type-asso', true);
+	}
+	else {
+		g.toggle('.type-asso', false);
+	}
+}
+
+document.forms[0].type_asso.forEach((r) => {
+	r.onchange = selectType;
+});
+
+selectType();
+</script>
+
+{{:admin_footer}}

@@ -1,0 +1,19 @@
+body {
+	font-family: Georgia, Times New Roman, serif;
+}
+
+header.main, footer.main, nav.main, header.nav, .breadcrumbs {
+	display: none;
+}
+
+article.single > h1 {
+	font-size: 1.7em;
+}
+
+article.single > h4 {
+	color: #666;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: Verdana, Arial, sans-serif;
+}

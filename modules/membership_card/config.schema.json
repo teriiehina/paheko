@@ -1,0 +1,46 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"properties": {
+		"header": {
+			"description": "En-tête",
+			"type": ["string", "null"]
+		},
+		"logo": {
+			"description": "Affichage du logo",
+			"type": "integer",
+			"enum": [0, 1, 2]
+		},
+		"fields": {
+			"description": "Champs à afficher",
+			"type": ["null", "array"],
+			"items": {
+				"type": "string"
+			}
+		},
+		"show_fields_names": {
+			"type": ["boolean"]
+		},
+		"show_subscription_label": {
+			"type": ["boolean"]
+		},
+		"photo": {
+			"description": "Champ pour la photo",
+			"type": ["string", "null"]
+		},
+		"id_service": {
+			"description": "Activité",
+			"type": ["integer", "null"]
+		},
+		"email_subject": {
+			"type": "string"
+		},
+		"email_body": {
+			"type": "string"
+		},
+		"sheet_gap": {
+			"type": "integer"
+		}
+	},
+	"required": [ "header", "logo", "fields", "show_fields_names", "show_subscription_label", "photo", "id_service", "email_subject", "email_body" ]
+}

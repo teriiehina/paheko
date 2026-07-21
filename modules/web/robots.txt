@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+
+Sitemap: {{$root_url}}sitemap.xml
+
+User-agent: GPTBot
+Disallow: /

@@ -1,0 +1,19 @@
+{{if !$parent}}
+	{{:error message="Missing parent parameter"}}
+{{/if}}
+
+<section class="documents">
+{{#documents order="name" parent=$parent except_in_text=true}}
+	<figure class="file">
+		<a href="{{$url}}">
+			{{if $thumb_url}}
+				<img src="{{$thumb_url}}" alt="{{$title}}" />
+			{{/if}}
+			<figcaption>
+				<b>{{$title}}</b>
+				<span class="type">{{$format}}</span> — <span class="size">{{$size|size_in_bytes}}</span>
+			</figcaption>
+		</a>
+	</figure>
+{{/documents}}
+</section>

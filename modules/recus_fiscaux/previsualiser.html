@@ -1,0 +1,26 @@
+{{#restrict block=true section="accounting" level="write"}}
+{{/restrict}}
+
+{{if !$_POST}}
+	{{:error message="Aucune donnée fournie"}}
+{{/if}}
+
+{{:assign var="preview" value=1}}
+
+{{:include file="/receipt/_header.html"
+	page_size="A4"
+	title="Reçu fiscal %06d - %s"|args:$id:$r.nom
+	hide_buttons=true
+}}
+
+<div class="watermark">
+	<div>Brouillon</div>
+</div>
+
+{{:include file="./_recu.html"}}
+
+{{:signature}}
+
+{{:include file="/receipt/_footer.html"}}
+
+

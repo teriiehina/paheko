@@ -1,0 +1,42 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"description": "Entrée dans le stock",
+	"properties": {
+		"type": {
+			"type": "string",
+			"enum": ["entry"]
+		},
+		"object": {
+			"description": "Objet",
+			"type": "string"
+		},
+		"category": {
+			"description": "Catégorie",
+			"type": "string"
+		},
+		"ecologic": {
+			"description": "Position Ecologic",
+			"type": ["string", "null"]
+		},
+		"weight": {
+			"description": "Poids unitaire",
+			"type": "integer"
+		},
+		"qty": {
+			"description": "Quantité",
+			"type": "integer"
+		},
+		"total_weight": {
+			"description": "Poids total",
+			"type": "integer"
+		},
+		"date": {
+			"type": "string"
+		},
+		"velo_id": {
+			"type": ["integer", "null"]
+		}
+	},
+	"required": ["type", "object", "category", "ecologic", "weight", "qty", "total_weight", "date"]
+}

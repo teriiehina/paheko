@@ -1,0 +1,25 @@
+{{#restrict block=true section="accounting" level="read"}}
+{{/restrict}}
+
+{{if !$_GET.year}}
+	{{:error message="Aucune année n'a été fournie"}}
+{{/if}}
+
+{{:include file="/receipt/_header.html"
+	page_size="A4"
+	title="Reçus fiscaux"
+	no_page=true
+}}
+
+{{#load annule=0 where="SUBSTR($$.date, 1, 4) = :year" :year=$_GET.year}}
+{{:include file="/receipt/_org_header.html"}}
+	{{:assign var="recu" value=$recu|replace:'%ID%':$id}}
+	{{$recu|raw}}
+
+	{{:signature}}
+</main>
+</div>
+
+{{/load}}
+
+{{:include file="/receipt/_footer.html"}}

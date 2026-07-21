@@ -1,0 +1,33 @@
+{{if !$_GET.id}}
+	{{:error message="Aucun numéro de reçu n'a été fourni"}}
+{{/if}}
+
+{{#load id=$_GET.id}}
+	{{if $logged_user.id !== $linked_user}}
+		{{#restrict block=true section="accounting" level="read"}}
+		{{/restrict}}
+	{{/if}}
+
+	{{:include file="/receipt/_header.html"
+		page_size="A4"
+		title="Reçu fiscal %06d - %s"|args:$id:$nom
+		header="small"
+	}}
+
+	{{if $annule}}
+	<div class="watermark watermark-red">
+		<div>Annulé</div>
+	</div>
+	{{/if}}
+
+	<div style="font-size: .9em">
+	{{:assign var="recu" value=$recu|replace:'%ID%':$id}}
+	{{$recu|raw}}
+	</div>
+
+	{{:signature}}
+
+	{{:include file="/receipt/_footer.html"}}
+{{else}}
+	{{:error message="Le numéro de reçu fourni n'a pas été trouvé"}}
+{{/load}}

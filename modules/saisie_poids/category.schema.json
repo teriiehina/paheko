@@ -1,0 +1,26 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"description": "Catégorie de sortie ou d'entrée (= provenance ou raison de sortie, vente, etc.)",
+	"properties": {
+		"type": {
+			"type": "string",
+			"enum": ["category"]
+		},
+		"label": {
+			"description": "Libellé",
+			"type": "string"
+		},
+		"target": {
+			"description": "Mouvement",
+			"type": "string",
+			"enum": ["entry", "exit"]
+		},
+		"ecologic": {
+			"description": "Position Ecologic",
+			"type": ["string", "null"],
+			"enum": ["PRE", "DEC_REE", "LIV"]
+		}
+	},
+	"required": ["type", "label", "target", "ecologic"]
+}

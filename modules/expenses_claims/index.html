@@ -1,0 +1,77 @@
+{{:admin_header title="Notes de frais"}}
+
+<nav class="tabs">
+	<aside>
+		{{#restrict section="config" level="admin"}}
+			{{:linkbutton href="config.html" label="Configuration" shape="settings"}}
+		{{/restrict}}
+		{{:linkbutton href="new.html" label="Nouvelle note de frais" shape="plus"}}
+	</aside>
+
+	{{#restrict section="accounting" level="read"}}
+	<ul>
+		<li{{if $_GET.status === 'all'}} class="current"{{/if}}><a href="./?status=all">Toutes les notes de frais</a></li>
+		<li{{if $_GET.status === 'waiting'}} class="current"{{/if}}><a href="./?status=waiting">À accepter</a></li>
+		<li{{if $_GET.status === 'payable'}} class="current"{{/if}}><a href="./?status=payable">À payer</a></li>
+		<li{{if $_GET.status === 'paid'}} class="current"{{/if}}><a href="./?status=paid">Payées</a></li>
+		<li{{if $_GET.status === 'cancelled'}} class="current"{{/if}}><a href="./?status=cancelled">Annulées</a></li>
+		<li{{if $_GET.status === 'draft'}} class="current"{{/if}}><a href="./?status=draft">Brouillons</a></li>
+		<li{{if !$_GET.status}} class="current"{{/if}}><a href="./">Mes notes de frais</a></li>
+	</ul>
+	{{/restrict}}
+</nav>
+
+{{:assign where="$$.user_id = %d"|args:$logged_user.id}}
+
+{{#restrict section="accounting" level="read"}}
+	{{if $_GET.status === 'all'}}
+		{{:assign where="1"}}
+	{{elseif $_GET.status}}
+		{{:assign status=$_GET.status|quote_sql}}
+		{{:assign where="$$.status = %s"|args:$status}}
+		{{:assign check=true}}
+	{{/if}}
+{{/restrict}}
+
+<form method="post" action="payment_multi.html">
+{{#list
+	select="$$.number AS 'Numéro'; $$.user_name AS 'Membre'; $$.date AS 'Date'; $$.label AS 'Libellé'; CASE $$.status WHEN 'waiting' THEN 'À accepter' WHEN 'payable' THEN 'À payer' WHEN 'paid' THEN 'Payée' WHEN 'cancelled' THEN 'Annulée' ELSE 'Brouillon' END AS 'Statut'; (SELECT SUM($$.amount) FROM @TABLE AS b WHERE $$.type = 'line' AND $$.claim = @TABLE.key) AS 'Montant'"|args:$config.user_fields.name_sql
+	order=1
+	desc=true
+	where="$$.type = 'claim' AND %s"|args:$where
+	check=$check
+}}
+	<tr class="{{if $status === 'cancelled'}}disabled crossed{{/if}}">
+		{{if $check}}
+		<td class="check">
+			{{if $status === 'payable'}}
+				{{:input type="checkbox" name="claims[]" value=$key}}
+				{{:assign has_checkboxes=true}}
+			{{/if}}
+		</td>
+		{{/if}}
+		<td class="num">{{:link href="details.html?key=%s"|args:$key label=$number}}</td>
+		<td>{{$col2}}</td>
+		<td>{{$date|date_short}}</td>
+		<td>{{$col4}}</td>
+		<td>{{$col5}}</td>
+		<td>{{$col6|money_currency}}</td>
+		<td class="actions">
+			{{:linkbutton href="details.html?key=%s"|args:$key label="Ouvrir" shape="menu"}}
+		</td>
+	</tr>
+{{else}}
+	<p class="alert block">
+		Aucune note de frais ici.
+	</p>
+{{/list}}
+
+{{if $has_checkboxes}}
+<p class="actions">
+	{{:button type="submit" label="Saisir un paiement pour les notes de frais sélectionnées" shape="right"}}
+</p>
+{{/if}}
+
+</form>
+
+{{:admin_footer}}

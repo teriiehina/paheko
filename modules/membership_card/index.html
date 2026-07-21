@@ -1,0 +1,54 @@
+{{#restrict section="users" level="read"}}
+	{{:admin_header title="Cartes de membres"}}
+
+	{{#restrict section="config" level="admin"}}
+
+		<nav class="tabs">
+			{{:linkbutton shape="settings" href="config.html" target="_dialog" label="Configuration"}}
+		</nav>
+
+	{{/restrict}}
+
+	<form method="post" action="planche.html" data-disable-progress="1" target="_dialog">
+		<fieldset>
+			<legend>Créer une planche de cartes de membres</legend>
+			<dl>
+				{{:input type="radio-btn" name="target" value="category" default="category" label="Tous les membres d'une catégorie"}}
+				{{:input type="radio-btn" name="target" value="some" label="Seulement certains membres" help="Sélectionnez cette option pour sélectionner les membres"}}
+			</dl>
+			<dl class="target-category">
+				{{#select id, name FROM users_categories WHERE hidden = 0 ORDER BY name COLLATE NOCASE}}
+					{{:assign var="categories.%d"|args:$id value=$name}}
+				{{/select}}
+				{{:input type="select" name="category" options=$categories label="Catégorie" required=true}}
+			</dl>
+			<dl class="target-some">
+				{{:input type="list" target="!users/selector.php" multiple=true required=true label="Membres à faire figurer" name="users"}}
+			</dl>
+		</fieldset>
+		<p class="submit">
+			{{if $pdf_enabled}}
+				{{:button type="submit" label="Générer en PDF" name="pdf" shape="pdf" class="main"}}
+			{{/if}}
+			{{:button type="submit" label="Prévisualiser" name="preview" shape="eye"}}
+			{{:button type="submit" label="Imprimer la planche" name="print" shape="print"}}
+		</p>
+	</form>
+
+	<script type="text/javascript">
+	function toggleTarget() {
+		g.toggle('.target-category', $('#f_target_category').checked);
+		g.toggle('.target-some', $('#f_target_some').checked);
+	}
+	toggleTarget();
+	$('#f_target_category').onchange = $('#f_target_some').onchange = toggleTarget;
+	</script>
+
+{{else}}
+	{{:admin_header title="Ma carte de membre"}}
+
+	{{:include file="./snippets/user_details.html" user=$logged_user}}
+
+{{/restrict}}
+
+{{:admin_footer}}

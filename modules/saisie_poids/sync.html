@@ -1,0 +1,183 @@
+{{:admin_header title="Import extensions" current="module_saisie_poids"}}
+
+{{:include file="_nav.html" current="sync"}}
+
+{{#load type="category"}}
+	{{:assign var="categories."|cat:$key label=$label ecologic=$ecologic}}
+{{/load}}
+
+{{if $module.config.caisse_exit|count}}
+	{{#extension name="caisse"}}
+		{{:assign pos_categories=$module.config.caisse_exit|keys}}
+
+		{{* Exclude sessions already saved *}}
+		{{#load where="$$.pos_session_id IS NOT NULL AND $$.type = 'exit'"}}
+			{{:assign var="ids." value=$pos_session_id}}
+		{{/load}}
+		{{:assign ids=$ids|arrayval}}
+
+		{{#select SUM(ti.qty * ti.weight) AS weight, SUM(ti.qty) AS count, s.id, c.id AS id_category,
+			c.name AS cat_name, s.closed AS date
+			FROM plugin_pos_sessions s
+			INNER JOIN plugin_pos_tabs t ON t.session = s.id
+			INNER JOIN plugin_pos_tabs_items ti ON ti.tab = t.id
+			INNER JOIN plugin_pos_products p ON p.id = ti.product
+			INNER JOIN plugin_pos_categories c ON c.id = p.category
+			WHERE s.closed IS NOT NULL
+			AND ti.weight IS NOT NULL
+			AND ti.weight > 0
+			AND c.!categories
+			AND s.id NOT IN (SELECT json_extract(document, '$.pos_session_id') FROM !table
+				WHERE json_extract(document, '$.pos_session_id') IS NOT NULL
+				AND json_extract(document, '$.type') = 'exit')
+			GROUP BY s.id, c.id
+			LIMIT 5000;
+			!table=$module.table
+			!categories='id'|sql_where:'IN':$pos_categories
+		}}
+			{{:assign var="category" from="module.config.caisse_exit.%s"|args:$id_category}}
+			{{:assign var="category" from="categories.%s"|args:$category}}
+
+			{{* The category might have been deleted *}}
+			{{if !$category}}
+				{{:continue}}
+			{{/if}}
+
+			{{:assign var="exits."
+				pos_session_id=$id
+				total_weight=$weight
+				weight=0
+				qty=$count
+				category=$category.label
+				ecologic=$category.ecologic
+				object="Caisse : %s"|args:$cat_name
+				date=$date
+			}}
+		{{/select}}
+	{{/extension}}
+{{/if}}
+
+{{#extension name="stock_velos"}}
+	{{#select source AS label
+		FROM plugin_stock_velos
+		WHERE poids IS NOT NULL AND source IS NOT NULL
+		GROUP BY source
+	}}
+		{{:assign hash=$label|md5}}
+		{{:assign var="velos_categories.%s"|args:$hash value=$label}}
+	{{/select}}
+
+	{{#foreach from=$module.config.velos_entry key="hash" item="key"}}
+		{{if $velos_categories|has_key:$hash}}
+			{{:assign var="velos_entries_names." from="velos_categories.%s"|args:$hash}}
+		{{/if}}
+	{{/foreach}}
+
+	{{#select raison_sortie AS label
+		FROM plugin_stock_velos
+		WHERE poids IS NOT NULL AND raison_sortie IS NOT NULL
+		GROUP BY raison_sortie
+	}}
+		{{:assign hash=$label|md5}}
+		{{:assign var="velos_categories.%s"|args:$hash value=$label}}
+	{{/select}}
+
+	{{#foreach from=$module.config.velos_exit key="hash" item="key"}}
+		{{if $velos_categories|has_key:$hash}}
+			{{:assign var="velos_exits_names." from="velos_categories.%s"|args:$hash}}
+		{{/if}}
+	{{/foreach}}
+
+	{{if $velos_exits_names|count}}
+		{{#select poids AS weight, date_sortie AS date, id, raison_sortie AS cat_name, md5(raison_sortie) AS key
+			FROM plugin_stock_velos
+			WHERE date_sortie IS NOT NULL
+			AND raison_sortie IS NOT NULL
+			AND poids IS NOT NULL
+			AND poids != 0
+			AND id NOT IN (SELECT json_extract(document, '$.velo_id') FROM !table
+				WHERE json_extract(document, '$.velo_id') IS NOT NULL
+				AND json_extract(document, '$.type') = 'exit')
+			AND !categories
+			LIMIT 5000;
+			!table=$module.table
+			!categories="raison_sortie"|sql_where:"IN":$velos_exits_names
+		}}
+			{{:assign var="key" from="module.config.velos_exit.%s"|args:$key}}
+			{{:assign var="category" from="categories.%s"|args:$key}}
+
+			{{* The category might have been deleted *}}
+			{{if !$category}}
+				{{:continue}}
+			{{/if}}
+
+			{{:assign var="exits."
+				velo_id=$id
+				total_weight=$weight
+				weight=$weight
+				qty=1
+				category=$category.label
+				ecologic=$category.ecologic
+				object="Sortie vélo : %s"|args:$cat_name
+				date=$date
+			}}
+		{{/select}}
+	{{/if}}
+
+	{{if $velos_entries_names|count}}
+		{{******** import entries ********}}
+
+		{{#select poids AS weight, date_entree AS date, id, source AS cat_name, md5(source) AS key
+			FROM plugin_stock_velos
+			WHERE date_entree IS NOT NULL
+			AND source IS NOT NULL
+			AND poids IS NOT NULL
+			AND poids != 0
+			AND id NOT IN (SELECT json_extract(document, '$.velo_id') FROM !table
+				WHERE json_extract(document, '$.velo_id') IS NOT NULL
+				AND json_extract(document, '$.type') = 'entry')
+			AND !categories
+			LIMIT 5000;
+			!table=$module.table
+			!categories="source"|sql_where:"IN":$velos_entries_names
+		}}
+			{{:assign var="category" from="module.config.velos_entry.%s"|args:$key}}
+			{{:assign var="category" from="categories.%s"|args:$category}}
+
+			{{* The category might have been deleted *}}
+			{{if !$category}}
+				{{:continue}}
+			{{/if}}
+
+			{{:assign var="entries."
+				velo_id=$id
+				total_weight=$weight
+				weight=$weight
+				qty=1
+				category=$category.label
+				ecologic=$category.ecologic
+				object="Entrée vélo : %s"|args:$cat_name
+				date=$date
+			}}
+		{{/select}}
+	{{/if}}
+{{/extension}}
+
+
+{{* Save items to DB *}}
+{{if $exits|count}}
+	{{:save key="uuid" type="exit" validate_schema="./exit.schema.json" from=$exits replace=true}}
+	<p class="block confirm">{{$exits|count}} sorties importées depuis les extensions.</p>
+{{/if}}
+
+{{* Save items to DB *}}
+{{if $entries|count}}
+	{{:save key="uuid" type="entry" validate_schema="./entry.schema.json" from=$entries replace=true}}
+	<p class="block confirm">{{$entries|count}} entrées importées depuis le stock de vélos.</p>
+{{/if}}
+
+{{if !$exits && !$entries}}
+	<p class="block alert">Rien à importer depuis les extensions.</p>
+{{/if}}
+
+{{:admin_footer}}

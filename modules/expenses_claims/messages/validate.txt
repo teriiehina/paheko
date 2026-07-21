@@ -1,0 +1,14 @@
+{{**keep_whitespaces**}}
+Bonjour,
+
+Une nouvelle note de frais a été soumise par un membre :
+
+Numéro : {{$claim.number}}
+{{if $claim.label}}Libellé : {{$claim.label|raw}}{{/if}}
+
+Cliquez sur ce lien pour la consulter, puis l'accepter ou la refuser :
+
+{{$module.url|raw}}details.html?key={{$claim.key}}
+
+
+Cordialement.

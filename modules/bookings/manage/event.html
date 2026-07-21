@@ -1,0 +1,193 @@
+{{#restrict section="users" level=$module.config.manage_access|or:'admin'}}
+{{else}}
+	{{#restrict section="config" level="admin" block=true}}
+	{{/restrict}}
+{{/restrict}}
+{{:admin_header title="Configuration d'un événement" current="module_bookings"}}
+
+{{if $_GET.id}}
+	{{#load key=$_GET.id type="event" assign="event"}}
+		{{:assign key=$key}}
+	{{else}}
+		{{:error message="Événément introuvable"}}
+	{{/load}}
+{{elseif $_GET.copy}}
+	{{#load key=$_GET.copy type="event" assign="event"}}
+	{{/load}}
+	{{:assign key=""|uuid}}
+{{else}}
+	{{:assign key=""|uuid}}
+{{/if}}
+
+{{:include file="../_nav.html" current="config" event=null}}
+
+{{:assign var="types"
+	checkbox="Case à cocher"
+	boolean="Sélecteur booléen (oui/non)"
+	date="Date"
+	datetime="Date et heure"
+	number="Nombre"
+	tel="Numéro de téléphone"
+	text="Texte"
+	textarea="Texte multi-lignes"
+}}
+
+{{#form on="save"}}
+	{{#foreach from=$_POST.fields|array_transpose item="field"}}
+		{{if !$field.label|trim || !$field.type}}
+			{{:continue}}
+		{{/if}}
+		{{if !$types|keys|has:$field.type}}
+			{{:error message="Type inconnu: %s"|args:$field.type}}
+		{{/if}}
+		{{:assign var="fields." required=$field.required|boolval type=$field.type label=$field.label help=$field.help|or:null}}
+	{{/foreach}}
+	{{if $_POST.notify_email|trim !== '' && !$_POST.notify_email|check_email}}
+		{{:error message="Adresse e-mail de notification invalide : %s"|args:$_POST.notify_email}}
+	{{/if}}
+	{{:save key=$key
+		validate_schema="../event.schema.json"
+		type="event"
+		label=$_POST.label|trim
+		description=$_POST.description|trim|or:null
+		max_weeks=$_POST.max_weeks|intval|or:1
+		use_closings=$_POST.use_closings|boolval
+		use_openings=$_POST.use_openings|boolval
+		openings_seats=$_POST.openings_seats|intval|or:null
+		openings_slots=$_POST.openings_slots|intval|or:null
+		openings_delay=$_POST.openings_delay|intval|or:null
+		email=$_POST.email|boolval
+		archived=$_POST.archived|boolval
+		fields=$fields|arrayval
+		notify_email=$_POST.notify_email|strval|or:null
+	}}
+
+	{{if $_GET.copy}}
+		{{#load type="slot" event=$event.key}}
+			{{:save key="uuid"
+				validate_schema="../slot.schema.json"
+				type="slot"
+				event=$.key
+				frequency=$frequency
+				day=$day
+				date=$date
+				open=$open
+				seats=$seats
+			}}
+		{{/load}}
+	{{/if}}
+	{{:redirect to="./?ok=1"}}
+	}
+{{/form}}
+
+{{:form_errors}}
+
+<form method="post" action="" data-focus=1>
+	<fieldset>
+		<legend>Événément</legend>
+		<dl>
+			{{:input type="text" name="label" label="Nom" required=true source=$event}}
+			{{:input type="textarea" cols=70 rows=7 name="description" label="Description" required=false source=$event help="Sera affiché sur la page d'inscription à l'événement"}}
+			<dd class="help">Syntaxe MarkDown acceptée. {{:linkbutton shape="help" target="_dialog" href="!static/doc/markdown.html" label="Aide de la syntaxe MarkDown"}}</dd>
+			{{:input type="checkbox" label="Archiver cet événement" name="archived" source=$event value=1}}
+			<dd class="help">Si coché, cet événement ne sera plus visible dans la liste et ne pourra plus être réservé.</dd>
+			{{:input type="email" label="Adresse e-mail de notification" help="Si renseignée, cette adresse recevra un message pour chaque réservation et chaque annulation. Laisser vide pour ne pas recevoir de notification." name="notify_email" source=$event}}
+			{{:input type="number" min=1 step=1 max=26 name="max_weeks" label="Nombre de semaines réservables" source=$event default=1 required=true}}
+			<dd class="help">
+				Par exemple, pour un événement tous les vendredis, inscrire le chiffre 2 ici permettra de réserver pour ce vendredi, et le vendredi suivant.<br />
+				Pour un événement tous les premier dimanches du mois, inscrire le chiffre 8 ici permettra de réserver pour le premier dimanche du prochain mois, et le premier dimanche du mois suivant (8 semaines = 2 mois).
+			</dd>
+			{{#module name="openings"}}
+				<dt><strong>Synchronisation avec les ouvertures</strong></dt>
+				{{:input type="checkbox" name="use_closings" value=1 source=$event label="Ne pas proposer de créneaux pendant les périodes de fermeture"}}
+				{{:input type="checkbox" name="use_openings" value=1 source=$event label="Utiliser les horaires d'ouverture comme créneaux"}}
+				<dd class="help">Si cette case est cochée, les créneaux seront automatiquement configurés à partir des informations indiquées dans l'extension {{:link href="%sconfig.html"|args:$url label="Horaires d'ouverture"}}.<br />Sinon, il faudra configurer les créneaux manuellement.</dd>
+				<dd class="help">{{:linkbutton shape="settings" href="%sconfig.html"|args:$url label="Configurer les ouvertures et fermetures"}}</dd>
+			</dl>
+		</fieldset>
+		<fieldset class="openings_options">
+			<legend>Pour chaque ouverture…</legend>
+			<dl>
+				{{:input type="number" min=0 name="openings_slots" source=$event label="Nombre de créneaux par ouverture" default=1 required=true}}
+				{{:input type="number" min=0 name="openings_seats" source=$event label="Nombre de places par créneau" required=true}}
+				{{:assign var="delay_options" 5="5 minutes" 10="10 minutes" 15="15 minutes" 20="20 minutes" 30="30 minutes" 60="1 heure" 120="2 heures" 240="4 heures"}}
+			</dl>
+			<dl class="openings_delay">
+				{{:input type="select" name="openings_delay" source=$event label="Intervalle entre chaque créneau" options=$delay_options required=true}}
+			{{/module}}
+		</dl>
+	</fieldset>
+
+	<fieldset>
+		<legend>Informations à demander aux inscrits</legend>
+		<dl>
+			<dd class="help">Pour chaque inscription, le nom de la personne sera toujours demandé.</dd>
+			{{:input type="checkbox" name="email" value="1" label="Demander aussi l'adresse e-mail" source=$event}}
+			<dd class="help">Si la personne indique une adresse e-mail, une confirmation d'inscription lui sera envoyée. Cocher cette case pour rendre l'adresse e-mail obligatoire.</dd>
+		</dl>
+	</fieldset>
+
+	<fieldset>
+		<legend>Autres informations à demander aux inscrits</legend>
+		<p class="help">
+			À utiliser si l'inscription nécessite d'autres informations, comme un numéro de téléphone par exemple.
+		</p>
+		<table class="list fields">
+			<thead>
+				<tr>
+					<td>Type de champ</td>
+					<td>Libellé du champ</td>
+					<td>Texte d'aide en dessous du champ</td>
+					<td>Champ obligatoire&nbsp;?</td>
+					<td></td>
+				</tr>
+			</thead>
+			<tbody>
+			{{:assign var="select" 0="Facultatif" 1="Obligatoire"}}
+			{{#foreach from=$event.fields item="field"}}
+				<tr>
+					<td>{{:input type="select" name="fields[type][]" default=$field.type options=$types required=true}}</td>
+					<td>{{:input type="text" name="fields[label][]" default=$field.label}}</td>
+					<td>{{:input type="text" name="fields[help][]" default=$field.help}}</td>
+					<td>{{:input type="select" name="fields[required][]" default=$field.required options=$select required=true}}</td>
+					<td class="actions">{{:button shape="minus" label="Enlever cette ligne" onclick="this.parentNode.parentNode.remove();"}}</td>
+				</tr>
+			{{else}}
+				<tr>
+					<td>{{:input type="select" name="fields[type][]" options=$types default="text" required=true}}</td>
+					<td>{{:input type="text" name="fields[label][]" default=$field.label}}</td>
+					<td>{{:input type="text" name="fields[help][]" default=$field.help}}</td>
+					<td>{{:input type="select" name="fields[required][]" default=$field.required options=$select required=true}}</td>
+					<td class="actions">{{:button shape="minus" label="Enlever ce champ" onclick="this.parentNode.parentNode.remove();"}}</td>
+				</tr>
+			{{/foreach}}
+			</tbody>
+		</table>
+		<p class="actions">
+			{{:button shape="plus" label="Ajouter un champ" onclick="var a = $('.fields tbody')[0].lastElementChild; var b = a.cloneNode(true); 			b.querySelectorAll('input, select').forEach((e) => e.value = null); a.parentNode.append(b);"}}
+		</p>
+	</fieldset>
+
+	<p class="submit">
+		{{:button type="submit" shape="right" name="save" label="Enregistrer" class="main"}}
+	</p>
+
+</form>
+
+<script type="text/javascript">
+var c = $('#f_use_openings_1');
+function checkOpenings () {
+	g.toggle('.openings_options', c.checked);
+}
+checkOpenings();
+c.onchange = checkOpenings;
+
+var a = $('#f_openings_slots');
+function changeOpeningsSlots() {
+	g.toggle('.openings_delay', a.value > 1);
+}
+a.onkeyup = changeOpeningsSlots;
+changeOpeningsSlots();
+</script>
+
+{{:admin_footer}}

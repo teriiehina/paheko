@@ -1,0 +1,194 @@
+.textEditor {
+    background: var(--gLightBackgroundColor);
+    position: relative;
+    height: 100%;
+}
+
+.textEditor textarea {
+    margin: 0;
+    height: calc(100% - 3.5em);
+    width: 98%;
+}
+
+nav.te {
+    margin-bottom: .5em;
+    height: 2em;
+}
+
+nav.te .bold, nav.te .italic, nav.te .title, nav.te .link {
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+nav.te .bold { font-weight: bold; }
+nav.te .italic { font-style: italic; }
+nav.te .link { text-decoration: underline; color: var(--gLinkColor); }
+
+nav.te .fullscreen {
+    text-indent: -70em;
+    width: 32px;
+    overflow: hidden;
+}
+
+nav.te .image {
+    margin-left: 2em;
+}
+
+nav.te .save, nav.te .fullscreen, nav.te .help, nav.te .preview {
+    float: right;
+}
+
+nav.te .fullscreen {
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAADFBMVEUAAABMTFFOTlBOTlCQ1uMHAAAAA3RSTlMAOcKBmOr4AAAAQUlEQVQI12P4/4D7P8N/B0Yo8XsC23+GZw+4pzM4TmBzYsAGgBKODNcecM9m+D+B7T3DPwfG/Qz/G5iABlzg+g8ANzMax/3kkQoAAAAASUVORK5CYII=");
+}
+
+nav.te .help, nav.te .save {
+    margin-left: 2em;
+}
+
+nav.te .save-label {
+    font-weight: bold;
+}
+
+.textEditor.fullscreen nav.te .fullscreen {
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAADFBMVEUAAABNTVFOTlBOTlBLB/faAAAAA3RSTlMAOsPdsomtAAAAQElEQVQI12NIEWCRZNi5gTePIe8D/08G6Q/8Txj0P/B/YVj/gf8fAzawHyQhD1ICJvI/8O9k2FnAl8eQosAiCQCgixb13aKGIwAAAABJRU5ErkJggg==");
+}
+
+.textEditor nav button.close {
+    display: none;
+    width: 95%;
+}
+
+.textEditor.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 98%;
+    height: 98%;
+    padding: 1%;
+    border-radius: 0;
+    z-index: 100000;
+}
+
+.textEditor.fullscreen textarea {
+    height: 90%;
+}
+
+.textEditor.iframe textarea {
+    display: none;
+}
+
+.textEditor.iframe nav {
+    text-align: center;
+}
+
+.textEditor.iframe nav button {
+    display: none;
+}
+
+.textEditor.iframe nav button.close {
+    display: inline-flex;
+    margin: 0 auto;
+}
+
+.textEditor iframe {
+    border: none;
+    background: rgba(var(--gLightBackgroundColor), 0.5);
+    border: 1px solid var(--gLightBorderColor);
+    border-radius: .5em;
+    width: 100%;
+}
+
+.textEditor iframe.hidden {
+    visibility: hidden;
+    width: 0px;
+    height: 0px;
+    position: absolute;
+    top: -1000px;
+}
+
+
+form .fileUpload .uploadHelper_progress {
+    position: absolute;
+    bottom: 1em;
+    left: 1em;
+    right: 1em;
+    text-align: center;
+    padding: 1em;
+    background: #ddd;
+    box-shadow: 0px 0px 5px #999;
+    border-radius: .5em;
+}
+
+form .fileUpload progress {
+    width: 50%;
+}
+
+form#insertImage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    background: rgb(0, 0, 0);
+    background: rgba(0, 0, 0, 0.75);
+}
+
+form#insertImage fieldset {
+    box-shadow: 5px 5px 10px #000;
+    margin: 1em;
+    padding: 1em;
+    background: var(--gLightBackgroundColor);
+    border-radius: .5em;
+    text-align: center;
+}
+
+form#insertImage dt {
+    margin: .2em 0;
+}
+
+form#insertImage .align input {
+    font-size: 1.2em;
+    line-height: 32px;
+    background-position: 5px center;
+    background-repeat: no-repeat;
+    padding: 5px;
+    padding-left: 42px;
+    border-radius: 5px;
+    margin: .5em;
+}
+
+form#insertImage .align input[name=""] {
+    background-image: url("../pics/img_flow.png");
+}
+
+form#insertImage .align input[name="left"] {
+    background-image: url("../pics/img_left.png");
+}
+
+form#insertImage .align input[name="right"] {
+    background-image: url("../pics/img_right.png");
+}
+
+form#insertImage .align input[name="center"] {
+    background-image: url("../pics/img_center.png");
+}
+
+form#insertImage .cancel input {
+    font-size: 0.8em;
+    margin: .5em;
+    opacity: 0.8;
+}
+
+#confirm_saved {
+    position: absolute;
+    right: -.1em;
+    top: -.1em;
+    margin: 0;
+    text-align: center;
+    transition: opacity .5s;
+}

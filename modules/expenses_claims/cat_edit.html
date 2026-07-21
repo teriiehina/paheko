@@ -1,0 +1,83 @@
+{{#restrict block=true section="config" level="admin"}}{{/restrict}}
+
+{{if $_GET.key !== 'new'}}
+	{{#load type="category" key=$_GET.key assign="cat"}}
+		{{:assign key=$key}}
+	{{else}}
+		{{:error message="La catégorie indiquée n'existe pas"}}
+	{{/load}}
+{{else}}
+	{{:assign key=""|uuid}}
+{{/if}}
+
+{{#form on="save"}}
+	{{if !$_POST.label|trim}}
+		{{:error message="Le nom de la catégorie ne peut être laissé vide."}}
+	{{/if}}
+
+	{{:save type="category"
+		validate_schema="./category.schema.json"
+		key=$key
+		label=$_POST.label|trim
+		account=$_POST.account|arrayval|or:null
+		price=$_POST.price|money_int|or:null
+		km=$_POST.vehicle|strval|trim|or:null
+		expense_type=$_POST.expense_type
+		notes=$_POST.notes|trim|or:null
+		id_project=$_POST.id_project|intval|or:null
+	}}
+	{{:redirect to="./config.html"}}
+
+{{/form}}
+
+{{:admin_header title="Catégorie de note de frais"}}
+
+{{:form_errors}}
+
+{{:assign var="types"
+	other="Autres"
+	flat_rate="Forfaitaire"
+	km_vehicle="Kilométrique, selon le type de véhicule, au barème légal"
+	km_free="Kilométrique, avec un barème personnalisé"
+}}
+
+{{#projects assign_list="projects"}}{{/projects}}
+
+<form method="post" action="">
+
+<fieldset>
+	<legend>Catégorie</legend>
+	<dl>
+		{{:input type="text" name="label" label="Nom de la catégorie" required=true source=$cat}}
+		{{:input type="textarea" cols=50 rows=5 name="notes" label="Instructions" required=false source=$cat help="Ces instructions seront affichées en dessous du champ description.\nUtile par exemple pour indiquer quelles sont les informations supplémentaires que le membre doit renseigner."}}
+		{{:input type="list" required=false name="account" label="Compte de dépense" source=$cat target="!acc/charts/accounts/selector.php?types=5&key=code"}}
+		{{if $projects|count}}
+			{{:input type="select" required=false name="id_project" label="Projet analytique" source=$cat options=$projects default_empty="— Aucun —"}}
+		{{/if}}
+		{{:input type="select" name="expense_type" required=true label="Type de dépense" options=$types source=$cat}}
+	</dl>
+	<dl class="expense_type expense_type-km_free">
+		{{:input type="money" name="price" label="Prix au kilomètre" required=true source=$cat}}
+	</dl>
+	<dl class="expense_type expense_type-flat_rate">
+		{{:input type="money" name="price" label="Prix unitaire" required=true source=$cat}}
+	</dl>
+</fieldset>
+
+<p class="submit">
+	{{:button type="submit" name="save" label="Enregistrer" shape="right" class="main"}}
+</p>
+
+<script type="text/javascript">
+var t = $('#f_expense_type');
+function selectType() {
+	g.toggle('.expense_type', false);
+	g.toggle('.expense_type-' + t.value, true);
+}
+selectType();
+t.onchange = selectType;
+</script>
+
+</form>
+
+{{:admin_footer}}

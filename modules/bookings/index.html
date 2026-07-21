@@ -1,0 +1,20 @@
+{{:assign var="custom_css." value="./style.css"}}
+{{:assign var="custom_css." value="/content.css"}}
+{{if !$logged_user}}{{:assign layout="public"}}{{/if}}
+{{:admin_header title="Réservations" custom_css=$custom_css layout=$layout current="module_bookings"}}
+
+{{if $logged_user}}
+	{{:include file="./_nav.html" current="index"}}
+{{/if}}
+
+{{if !$_GET.event && $logged_user.id}}
+	{{#load type="booking" id_user=$logged_user.id where="$$.date >= date()" count=true}}
+		{{if $count}}
+			<p class="alert block">Vous avez {{$count}} réservations. {{:linkbutton shape="menu" label="Voir mes réservations" href="my_bookings.html"}}</p>
+		{{/if}}
+	{{/load}}
+{{/if}}
+
+{{:include file="./_form.html" current="index"}}
+
+{{:admin_footer}}

@@ -1,0 +1,53 @@
+{{if !$module.config.contact_form || !$config.org_email}}
+	{{:redirect to="./"}}
+{{/if}}
+
+{{#form on="send"}}
+	{{:captcha verify=true}}
+	{{if $_POST.name|trim === ''}}
+		{{:error message="Merci de renseigner un nom."}}
+	{{elseif $_POST.name|regexp_match:'/https?:|www\./'}}
+		{{:error message="Le nom ne peut pas comporter d'adresse web"}}
+	{{elseif $_POST.email|regexp_match:'/https?:|www\./'}}
+		{{:error message="L'adresse e-mail ne peut pas comporter d'adresse web"}}
+	{{elseif $_POST.message|trim === ''}}
+		{{:error message="Merci de renseigner un message."}}
+	{{elseif !$_POST.email|trim === ''}}
+		{{:error message="Merci d'indiquer votre adresse e-mail."}}
+	{{elseif !$_POST.email|check_email}}
+		{{:error message="L'adresse e-mail renseignée est invalide."}}
+	{{/if}}
+
+	{{:assign body="Message de :\n%s\n%s\n\n---\n\n%s"|args:$_POST.name:$_POST.email:$_POST.message}}
+	{{:mail to=$config.org_email subject="Message depuis le formulaire de contact" body=$body replyto=$_POST.email|trim}}
+	{{:redirect to="%s?sent=ok"|args:$request_url}}
+{{/form}}
+
+{{:include file="./_head.html" title="Contact"}}
+
+<article class="single">
+	<h1>Contact</h1>
+
+	{{if $_GET.sent}}
+		<p class="alert">Votre message a bien été transmis !</p>
+	{{else}}
+		<form method="post" action="">
+			<fieldset>
+				<legend>Renseignez ce formulaire pour nous envoyer un message</legend>
+
+				{{:form_errors}}
+
+				<dl>
+					{{:input type="text" name="name" label="Votre nom" required=true}}
+					{{:input type="email" name="email" label="Votre adresse e-mail" required=true}}
+					{{:input type="textarea" cols=50 rows=15 name="message" label="Message" required=true}}
+					<dd class="captcha">{{:captcha html=true}}</dd>
+				</dl>
+				<p class="submit">{{:button type="submit" name="send" label="Envoyer"}}</p>
+			</fieldset>
+		</form>
+	{{/if}}
+
+</article>
+
+{{:include file="./_foot.html"}}

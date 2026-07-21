@@ -1,0 +1,23 @@
+<div class="page">
+
+{{if !$hide_header}}
+<header class="organization">
+	{{if $config.files.logo}}
+	<figure class="logo">
+		<img src="{{$config.files.logo}}&150px" />
+	</figure>
+	{{/if}}
+	<section>
+		<h1>{{$config.org_name}}</h1>
+		{{if $config.org_infos}}<h2>{{$config.org_infos|escape|nl2br}}</h2>{{/if}}
+		<h3>{{$config.org_address|replace:"\n":" — "}}</h3>
+		<h4>
+			{{if $config.org_phone}}<a href="tel:{{$config.org_phone}}">{{$config.org_phone}}</a>{{/if}}
+			{{if $config.org_email}}<a href="mailto:{{$config.org_email}}">{{$config.org_email}}</a>{{/if}}
+			{{if $site_url}}<a target="_blank" href="{{$site_url}}">{{$site_url}}</a>{{/if}}
+		</h4>
+	</section>
+</header>
+{{/if}}
+
+<main>

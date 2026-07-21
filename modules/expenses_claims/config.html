@@ -1,0 +1,49 @@
+{{#restrict block=true section="config" level="admin"}}{{/restrict}}
+{{:include file="./_config_default.tpl" keep="module.config,vehicles"}}
+
+{{#form on="save"}}
+	{{:save key="config" notify_users=$_POST.notify_users|arrayval}}
+	{{:redirect to="./config.html?msg=ok"}}
+{{/form}}
+
+{{:admin_header title="Configuration des notes de frais"}}
+
+{{if $_GET.msg === 'ok'}}
+	<p class="confirm block">La configuration a été enregistrée.</p>
+{{/if}}
+
+{{:form_errors}}
+
+<nav class="tabs">
+	<aside>
+		{{:linkbutton shape="plus" href="./cat_edit.html?key=new" label="Ajouter une catégorie"}}
+	</aside>
+	{{:linkbutton shape="left" href="./" label="Liste des notes de frais"}}
+</nav>
+
+{{#list type="category" schema="./category.schema.json" columns="label" order="label" disable_user_sort=true}}
+	<tr>
+		<th>{{$label}}</th>
+		<td class="actions">
+			{{:linkbutton shape="edit" href="./cat_edit.html?key=%s"|args:$key label="Modifier"}}
+			{{:linkbutton shape="delete" href="./cat_delete.html?key=%s"|args:$key label="Supprimer" target="_dialog"}}
+		</td>
+	</tr>
+{{/list}}
+
+<form method="post" action="">
+
+	<fieldset>
+		<legend>Notifications</legend>
+		<dl>
+			{{:input type="list" name="notify_users" source=$module.config default=$config.org_email label="Membres à notifier lors du dépôt d'une nouvelle note de frais" help="Si ce champ est laissé vide, la notification sera envoyée à l'adresse e-mail de l'association. Maximum 10 membres." required=false multiple=true target="!users/selector.php" max=10}}
+		</dl>
+	</fieldset>
+
+	<p class="submit">
+		{{:button type="submit" name="save" label="Enregistrer" shape="right" class="main"}}
+	</p>
+
+</form>
+
+{{:admin_footer}}

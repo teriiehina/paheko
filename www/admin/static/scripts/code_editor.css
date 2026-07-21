@@ -1,0 +1,141 @@
+.codeEditor {
+	min-height: 600px;
+	width: 100%;
+	border: 1px solid var(--gBorderColor);
+	background: var(--gLightBackgroundColor);
+	position: relative;
+	display: block;
+}
+
+.codeEditor .sk_help {
+	background: var(--gLightBorderColor);
+	border-top: .2rem solid var(--gBorderColor);
+	position: absolute;
+	font-size: .9em;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 1.2rem;
+	padding: .3rem 1rem 0;
+	font-family: "Deja Vu Sans Mono", "Droid Sans Mono", "Courier New", Courier, monospace;
+}
+
+.codeEditor .sk_toolbar {
+	border-bottom: .2em solid var(--gBorderColor);
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 2.5em;
+	padding: 0;
+}
+
+.codeEditor .sk_toolbar button:first-child {
+	font-weight: bold;
+}
+
+.codeEditor .sk_toolbar p {
+	display: inline;
+	padding: .3em .5em;
+	border-radius: .5em;
+	font-size: .9em;
+	margin-left: 2em;
+}
+
+.codeEditor .sk_toolbar button {
+	margin: 4px .5em;
+}
+
+.codeEditor .lineCount, .codeEditor textarea {
+	font-family: "Deja Vu Sans Mono", "Droid Sans Mono", "Courier New", Courier, monospace;
+	font-size: 11pt;
+	line-height: 11pt;
+}
+
+.codeEditor .editor {
+	position: absolute;
+	top: calc(2.7em);
+	height: calc(100% - 4.2em);
+	bottom: calc(1.6em + .4em);
+	left: 0;
+	right: 0;
+	background: #333;
+}
+
+.codeEditor .container {
+	position: relative;
+	display: block;
+}
+
+.codeEditor textarea, .codeEditor .lineCount {
+	font-family: "Andale Mono", "Monaco", "Lucida", "Courier New", monospace;
+	font-size: 13pt;
+	line-height: 16pt;
+}
+
+.codeEditor .lineCount {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	width: 46px;
+	text-align: right;
+	border-right: 2px solid #666;
+	overflow: hidden;
+	color: #999;
+}
+
+.codeEditor .lineCount i {
+	display: block;
+	padding-right: 2px;
+	font-weight: normal;
+}
+
+.codeEditor .lineCount b {
+	display: block;
+	padding-right: 2px;
+	font-weight: normal;
+}
+
+.codeEditor .lineCount b.current {
+	background: #666;
+	color: #fff;
+}
+
+.codeEditor .container {
+	position: absolute;
+	right: 4px;
+	top: 0;
+	bottom: 0;
+	left: 50px;
+	margin: 0;
+	padding: 0;
+}
+
+.codeEditor textarea {
+	height: 100%;
+	width: 100%;
+	padding: 0 0 0 2px;
+	margin: 0;
+	background: transparent;
+	color: #fff;
+	border-radius: none;
+	border: none;
+	overflow: auto;
+	resize: none;
+	box-shadow: none;
+}
+
+.codeEditor.fullscreen {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 100000;
+}

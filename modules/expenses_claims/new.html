@@ -1,0 +1,60 @@
+{{#restrict section="accounting" level="write"}}
+	{{:assign is_admin=true}}
+{{else}}
+	{{:assign is_admin=false}}
+{{/restrict}}
+
+{{#form on="save"}}
+	{{#load select="MAX($$.number) AS number" type="claim" assign="max"}}
+	{{/load}}
+	{{:assign new_number="%d+1"|math:$max.number}}
+	{{:assign key=""|uuid}}
+
+	{{if $is_admin}}
+		{{#foreach from=$_POST.user key="id" item="name"}}
+			{{:assign user_id=$id user_name=$name}}
+		{{else}}
+			{{:error message="Aucun membre sélectionné"}}
+		{{/foreach}}
+	{{else}}
+		{{:assign user_id=$logged_user.id user_name=$logged_user._name}}
+	{{/if}}
+
+	{{:save
+		validate_schema="./claim.schema.json"
+		key=$key
+		number=$new_number
+		type="claim"
+		label=$_POST.label|trim|or:null
+		date=$now|date_format:"%Y-%m-%d"
+		user_id=$user_id
+		user_name=$user_name
+		status="draft"
+	}}
+	{{:redirect to="./details.html?key=%s"|args:$key}}
+{{/form}}
+
+{{:admin_header title="Nouvelle note de frais"}}
+
+{{:form_errors}}
+
+<form method="post" action="">
+	<fieldset>
+		<legend>Nouvelle note de frais</legend>
+		<dl>
+		{{if $is_admin}}
+			{{:assign var="me.%d"|args:$logged_user.id value=$logged_user._name}}
+			{{:input type="list" name="user" label="Membre" required=true default=$me target="!users/selector.php"}}
+		{{else}}
+			<dt>Membre</dt>
+			<dd>{{$logged_user._name}}</dd>
+		{{/if}}
+			{{:input type="text" name="label" label="Objet de la note de frais" required=false help="Courte description de l'objet de la note de frais."}}
+		</dl>
+	</fieldset>
+	<p class="submit">
+		{{:button type="submit" shape="right" label="Créer" name="save" class="main"}}
+	</p>
+</form>
+
+{{:admin_footer}}

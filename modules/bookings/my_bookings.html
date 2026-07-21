@@ -1,0 +1,38 @@
+{{#restrict block=true}}{{/restrict}}
+
+{{:assign var="custom_css." value="./style.css?2023-11-14"}}
+{{:admin_header title="Mes réservations" custom_css=$custom_css current="module_bookings"}}
+
+{{:include file="./_nav.html" current="my_bookings"}}
+
+
+<section class="my_bookings">
+	{{#load type="booking" id_user=$logged_user.id where="key != :booking AND $$.date >= date()" :booking=$_GET.b|or:''}}
+		{{#load type="event" key=$event assign="e"}}{{/load}}
+		<article>
+			<h5>Vous avez réservé&nbsp;:</h5>
+			<h2>{{$e.label}}</h2>
+			<h3>{{$date|date_long}} à <span>{{$date|date_hour}}</span></h3>
+			<h5>(Au nom de&nbsp;: {{$name}})</h5>
+			{{if $fields}}
+				<ul>
+					{{#foreach from=$fields key="label" item="value"}}
+						<li>
+							{{if $value|gettype === 'array'}}
+								{{:assign value=$value.value label=$value.label}}
+							{{/if}}
+							<strong>{{$label}}&nbsp;:</strong> {{$value}}
+						</li>
+					{{/foreach}}
+				</ul>
+			{{/if}}
+			<form method="post" action="./" onsubmit="return confirm('Annuler la réservation ?');">
+				{{:button type="submit" name="cancel" value=$key label="Annuler cette réservation" shape="delete" }}
+			</form>
+		</article>
+	{{else}}
+		<p class="alert block">Vous n'avez fait aucune réservation.</p>
+	{{/load}}
+</section>
+
+{{:admin_footer}}

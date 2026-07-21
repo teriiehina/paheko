@@ -1,0 +1,30 @@
+{{**keep_whitespaces**}}
+Bonjour,
+
+Votre note de frais :
+
+Numéro : {{$claim.number}}
+{{if $claim.label}}Libellé : {{$claim.label|raw}}{{/if}}
+
+A été refusée pour le motif suivant :
+
+{{if !$message}}(aucun motif indiqué){{else}}{{$message|raw}}{{/if}}
+
+{{if $action === 'delete'}}
+La note de frais a été supprimée.
+{{elseif $action === 'draft'}}
+La note de frais est repassée en brouillon.
+
+Vous pouvez la corriger et re-demander sa validation ici :
+
+{{$module.url|raw}}details.html?key={{$claim.key}}
+{{elseif $action === 'cancel'}}
+La note de frais a été annulée.
+
+Vous pouvez la supprimer à cette adresse :
+
+{{$module.url|raw}}details.html?key={{$claim.key}}
+{{/if}}
+
+
+Cordialement.

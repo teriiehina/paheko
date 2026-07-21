@@ -1,0 +1,13 @@
+<h2 class="ruler">Mes reçus fiscaux</h2>
+
+{{#list linked_user=$logged_user.id max=null select="$$.date AS 'Date'; $$.montant AS 'Montant'"}}
+	<tr class="{{if $annule}}disabled crossed{{/if}}">
+		<td>{{$date|date_short}}</td>
+		<td class="money">{{$montant|raw|money_currency_html}}</td>
+		<td class="actions">
+			{{:linkbutton shape="eye" label="Ouvrir" href="%srecu.html?id=%d"|args:$module.url:$id target="_dialog"}}
+		</td>
+	</tr>
+{{else}}
+	<p class="alert block">Il n'y a aucun reçu fiscal lié à votre compte.</p>
+{{/list}}

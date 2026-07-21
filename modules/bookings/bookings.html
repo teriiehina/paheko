@@ -1,0 +1,177 @@
+{{if !$module.config.access}}
+	{{:assign var="module.config.access" value="write"}}
+{{/if}}
+
+{{#restrict section="users" level=$module.config.access block=true}}{{/restrict}}
+
+{{if $_GET.event}}
+	{{#load type="event" key=$_GET.event assign="event"}}
+	{{else}}
+		{{:error message="L'événement indiqué est introuvable"}}
+	{{/load}}
+{{else}}
+	{{#load type="event" group="$$.type HAVING COUNT(*) = 1" assign="event"}}
+	{{/load}}
+{{/if}}
+
+{{if $event}}
+	{{:assign title="Inscriptions — %s"|args:$event.label}}
+{{else}}
+	{{:assign title="Inscriptions"}}
+{{/if}}
+
+{{:admin_header title=$title custom_css="./style.css" current="module_bookings"}}
+
+{{if $_GET.past}}
+	{{:assign subcurrent="past"}}
+	{{:assign where="date($$.date) < date()"}}
+	{{*:delete type="booking" where="date($$.date) < date('now', '-1 month')"*}}
+{{else}}
+	{{:assign subcurrent="default"}}
+	{{:assign where="date($$.date) >= date()"}}
+{{/if}}
+
+{{:include file="./_nav.html" current="bookings" subcurrent=$subcurrent}}
+
+{{if !$event}}
+
+	{{#list select="$$.label AS 'Événement';
+		(SELECT COUNT(*) FROM @TABLE b WHERE $$.type = 'booking' AND $$.event = @TABLE.key AND $$.date >= date()) AS 'Inscriptions à venir';
+		(SELECT COUNT(*) FROM @TABLE b WHERE $$.type = 'booking' AND $$.event = @TABLE.key AND $$.date < date()) AS 'Inscriptions passées'"
+		where="$$.type = 'event'"
+		order=1}}
+		<tr>
+			<th><a href="?event={{$key}}">{{$label}}</a></th>
+			<td>{{:link href="?event=%s"|args:$key label=$col2 class="num"}}</td>
+			<td>{{:link href="?event=%s&past=1"|args:$key label=$col3 class="num"}}</td>
+			<td class="actions">{{:linkbutton shape="menu" label="Liste des inscriptions" href="?event=%s"|args:$key}}</td>
+		</tr>
+	{{else}}
+		<p class="block alert">Il n'y a aucun événement.</p>
+	{{/list}}
+
+	<p class="help">Note : les inscriptions passées (plus d'un mois) sont automatiquement supprimées.</p>
+
+{{else}}
+
+	{{if $_GET.cancel}}
+		{{:delete key=$_GET.cancel type="booking" event=$event.key}}
+		{{:redirect to="?event=%s"|args:$event.key}}
+	{{/if}}
+
+
+	{{if $_GET.users}}
+	<div class="help block">
+		<p>Cette liste tente d'associer une fiche membre existante à partir de l'adresse e-mail ou du nom de la personne inscrite à l'événement, et affiche la liste des inscriptions aux activités qui sont liées à cette fiche membre.</p>
+		<p>Utile par exemple pour préparer un événement, en imprimant la liste des inscrits et savoir à l'avance si un invité doit renouveler sa cotisation.</p>
+	</div>
+	{{/if}}
+
+	<section class="booking_list">
+		{{if $subcurrent !== 'past'}}
+			{{if $event.use_openings}}
+				{{:assign seats_left_column="MAX(0, %s - (SELECT COUNT(*) FROM @TABLE b WHERE $$.type = 'booking' AND $$.date = @TABLE.$$.date AND $$.event = @TABLE.$$.event)) AS 'Places restantes';"|args:$event.openings_seats}}
+			{{else}}
+				{{:assign seats_left_column="MAX(0, (SELECT $$.seats FROM @TABLE b WHERE $$.type = 'slot' AND key = @TABLE.$$.slot)
+					- (SELECT COUNT(*) FROM @TABLE b WHERE $$.type = 'booking' AND $$.slot = @TABLE.$$.slot AND $$.date = @TABLE.$$.date)) AS 'Places restantes';"}}
+			{{/if}}
+		{{/if}}
+		{{:assign
+			current_day=null
+			current_hour=null
+			export=true
+		}}
+		{{if $_GET.users}}
+			{{:assign
+				user_columns="; NULL AS 'Membre ?'; NULL AS 'Activités'"
+				export=false
+			}}
+		{{/if}}
+		{{#list select="date($$.date) AS 'Date';
+			$$.date AS 'Heure';
+			%s $$.name AS 'Nom';
+			json_object('email', json_quote($$.email), 'fields', json($$.fields)) AS 'Autres informations' %s"|args:$seats_left_column:$user_columns
+			type="booking"
+			event=$event.key
+			where=$where
+			order="2"
+			disable_user_sort=$_GET.users
+			export=$export}}
+			{{if $_GET.users}}
+				{{:assign var="search_fields" _email=$email _name=$name _reversed_name=$name}}
+				{{#users search=$search_fields assign="user"}}{{/users}}
+			{{/if}}
+			<tr>
+				<td>
+					{{if $col1 !== $current_day}}
+						{{$date|date_long}}
+						{{:assign current_day=$col1 current_hour=null}}
+					{{/if}}
+				</td>
+				{{:assign hour=$date|date_hour}}
+				{{if $hour !== $current_hour}}
+					<td>
+						{{$hour}}
+						{{:assign current_hour=$hour}}
+					</td>
+					{{if $seats_left_column}}
+						<td>{{$col3}}</td>
+					{{/if}}
+				{{else}}
+					<td></td>
+					{{if $seats_left_column}}
+						<td></td>
+					{{/if}}
+				{{/if}}
+				<th>{{$name}}</th>
+				<td>
+					{{if $email}}<a href="mailto:{{$email}}">{{$email}}</a><br />{{/if}}
+					{{#foreach from=$fields key="label" item="value"}}
+						{{if $value|gettype === 'array'}}
+							{{:assign value=$value.value label=$value.label}}
+						{{/if}}
+						<strong>{{$label}}&nbsp;:</strong> {{$value}}<br />
+					{{/foreach}}
+				</td>
+				{{if $_GET.users}}
+					<td>
+						{{if $user}}
+							{{:tag color="darkgreen" label="Oui"}}
+						{{else}}
+							{{:tag color="#999" label="Non"}}
+						{{/if}}
+					</td>
+					<td>
+					{{if $user}}
+						{{#subscriptions user=$user.id by_service=true archived=false}}
+							{{$label}}
+							{{if $status === -1}}
+								{{:tag small=true color="darkred" label="Expiré"}}
+							{{elseif $status === 1}}
+								{{:tag small=true color="darkgreen" label="En cours"}}
+							{{else}}
+								{{:tag small=true color="#999" label="Inscrit"}}
+							{{/if}}
+							<br />
+						{{/subscriptions}}
+					{{/if}}
+					</td>
+				{{/if}}
+				<td class="actions">
+					{{if $user}}
+						{{:linkbutton shape="user" label="Fiche membre" href="!users/details.php?id=%d"|args:$user.id}}
+					{{/if}}
+					{{:linkbutton shape="delete" label="Annuler" href="?event=%s&cancel=%s"|args:$event.key:$key onclick="return confirm('Annuler ?');"}}
+				</td>
+			</tr>
+		{{else}}
+			<p class="alert block">Aucune réservation.</p>
+		{{/list}}
+
+		<p class="help">Note : les inscriptions passées (plus d'un mois) sont automatiquement supprimées.</p>
+
+	</section>
+{{/if}}
+
+
+{{:admin_footer}}

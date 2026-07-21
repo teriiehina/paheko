@@ -1,0 +1,152 @@
+{{#restrict section="accounting" level="write" block=true}}{{/restrict}}
+
+{{#load assign="claim" key=$_GET.claim}}
+{{else}}
+	{{:error message="Cette note de frais n'existe pas"}}
+{{/load}}
+
+{{if $claim.status !== 'waiting'}}
+	{{:error message="Cette note de frais n'est pas en attente de validation: %s"|args:$claim.status}}
+{{/if}}
+
+{{#form on="save"}}
+	{{:assign total=0}}
+	{{:assign var="upload_path" value="%s/%s"|args:$module.storage_root:$claim.key}}
+
+	{{#foreach from=$_POST.lines|array_transpose}}
+		{{:assign var="lines." debit=$amount label=$label account=$account|keys|key:0 id_project=$id_project}}
+		{{:assign amount=$amount|money_int}}
+		{{:assign total="%d+%d"|math:$amount:$total}}
+	{{/foreach}}
+
+	{{if !$total}}
+		{{:error message="Cette note de frais ne comporte aucune ligne"}}
+	{{/if}}
+
+	{{if !$_POST.label|trim}}
+		{{:error message="Le libellé doit être renseigné."}}
+	{{/if}}
+
+	{{:assign var="lines." credit=$total|money_raw account=$_POST.account|keys|key:0 label="Dette envers le membre"}}
+
+	{{:api
+		method="POST"
+		path="accounting/transaction"
+		assign="result"
+
+		id_year=$_POST.id_year|intval
+		type="advanced"
+		date=$_POST.date
+		label=$_POST.label|trim
+		reference="NDF-%d"|args:$claim.number
+		lines=$lines
+		notes=$_POST.notes|trim|or:null
+		linked_users=$claim.user_id
+		move_attachments_from=$upload_path
+	}}
+	{{:save key=$claim.key status="payable" id_transaction=$result.id}}
+
+	{{#users id=$claim.user_id}}
+		{{if !$_email}}
+			{{:break}}
+		{{/if}}
+		{{:include file="./messages/accept.txt" capture="message" message=$_POST.message|trim claim=$claim}}
+		{{:mail to=$_email subject="Votre note de frais a été acceptée" body=$message|raw notification=true}}
+	{{/users}}
+
+	{{:redirect to="details.html?key=%s"|args:$claim.key}}
+{{/form}}
+
+{{#load type="line" claim=$claim.key}}
+	{{:assign var="notes" value="%s\n\n%s"|args:$notes:$description}}
+{{/load}}
+{{:assign var="default_account.4110" value="4110 — Autres usagers"}}
+{{#years closed=false}}
+	{{:assign var="open_years.%d"|args:$id value=$label}}
+	{{if $start_date <= $now && $end_date >= $now}}
+		{{:assign best_year=$id}}
+	{{/if}}
+{{/years}}
+{{:assign default_label="Note de frais n°%d"|args:$claim.number}}
+
+{{if !$open_years|count}}
+	{{:error message="Aucun exercice n'est ouvert, il n'est pas possible de créer une écriture et donc d'accepter cette note de frais."}}
+{{/if}}
+
+{{#projects assign_list="projects"}}{{/projects}}
+
+{{:admin_header title="Accepter la note de frais n°%d"|args:$claim.number}}
+
+{{:form_errors}}
+
+<form method="post" action="">
+	<fieldset>
+		<legend>Écriture de note de frais</legend>
+		<dl>
+			{{:input type="select" default=$best_year name="id_year" label="Exercice" required=true options=$open_years}}
+			{{:input type="date" default=$now name="date" label="Date" required=true}}
+			{{:input type="text" default=$claim.label|or:$default_label name="label" label="Libellé" required=true}}
+			{{:input type="list" name="account" label="Compte de tiers" required=true target="!acc/charts/accounts/selector.php?types=4&key=code&id_year=%d"|args:$best_year default=$default_account}}
+			{{:input type="textarea" name="notes" label="Remarques" default=$notes|trim cols=50 rows=5}}
+		</dl>
+	</fieldset>
+
+	<fieldset>
+		<legend>Lignes de la note de frais</legend>
+
+		<table class="list auto">
+			<thead>
+				<tr>
+					<td>Compte</td>
+					<td>Libellé</td>
+					<td>Référence</td>
+					<td>Montant</td>
+					{{if $projects|count}}
+						<td>Projet analytique</td>
+					{{/if}}
+				</tr>
+			</thead>
+			<tbody>
+				{{#load type="line" claim=$claim.key}}
+					{{:assign default_account=null}}
+					{{:assign default_label=$label}}
+					{{if $date}}
+						{{:assign date_short=$date|date_short}}
+						{{:assign default_label="%s (%s)"|args:$label:$date_short}}
+					{{/if}}
+					{{:assign var="default_account.%s"|args:$account value=$account}}
+					<tr>
+						<td class="account">{{:input type="list" name="lines[account][]" required=true target="!acc/charts/accounts/selector.php?types=5&key=code&id_year=%d"|args:$best_year default=$default_account}}</td>
+						<td>{{:input type="text" name="lines[label][]" default=$default_label required=false}}</td>
+						<td>{{:input type="text" name="lines[reference][]" default=$reference required=false size=10}}</td>
+						<td class="money">{{:input type="money" name="lines[amount][]" default=$amount required=true}}</td>
+						{{if $projects|count}}
+							<td>{{:input type="select" required=false name="lines[id_project][]" default=$id_project options=$projects default_empty="— Aucun —"}}</td>
+						{{/if}}
+					</tr>
+				{{/load}}
+			</tbody>
+		</table>
+	</fieldset>
+	<p class="submit">
+		{{:button type="submit" shape="right" label="Accepter" name="save" class="main"}}
+	</p>
+	<p class="help">
+		La note de frais sera transformée en écriture comptable. Les fichiers joints seront déplacés dans l'écriture.
+	</p>
+</form>
+
+<script type="text/javascript">
+function toggleYearForSelector()
+{
+	$('.input-list button').forEach((e) => {
+		e.value = e.value.replace(/year=\d+/, 'year=' + y.value);
+	});
+}
+
+var y = $('#f_id_year')
+
+y.onchange = toggleYearForSelector;
+</script>
+
+{{:admin_footer}}

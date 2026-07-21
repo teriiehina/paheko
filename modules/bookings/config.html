@@ -1,0 +1,35 @@
+{{#restrict section="config" level="admin" block=true}}{{/restrict}}
+{{#form on="save"}}
+	{{:save key="config"
+		access=$_POST.access
+		manage_access=$_POST.manage_access
+	}}
+	{{:redirect to="./manage/?ok=1"}}
+{{/form}}
+
+{{:admin_header title="Configuration des accès" current="module_bookings"}}
+
+{{:include file="./_nav.html" current="config" subcurrent="access"}}
+
+<form method="post" action="">
+	<fieldset>
+		<legend>Qui peut voir et gérer les inscriptions ?</legend>
+		<dl>
+			{{:input type="radio" name="access" source=$module.config value="none" label="Tous les membres connectés"}}
+			{{:input type="radio" name="access" source=$module.config value="read" label="Seulement les membres pouvant lire la liste des membres"}}
+			{{:input type="radio" name="access" source=$module.config default="write" value="write" label="Seulement les membres pouvant ajouter et modifier des membres"}}
+		</dl>
+	</fieldset>
+	<fieldset>
+		<legend>Qui peut gérer les événements et créneaux ?</legend>
+		<dl>
+			{{:input type="radio" name="manage_access" source=$module.config value="write" label="Les membres pouvant ajouter et modifier des membres"}}
+			{{:input type="radio" name="manage_access" source=$module.config default="admin" value="admin" label="Les membres administrateurs de la gestion des membres"}}
+		</dl>
+	</fieldset>
+	<p class="submit">
+		{{:button type="submit" label="Enregistrer" name="save" shape="right" class="main"}}
+	</p>
+</form>
+
+{{:admin_footer}}

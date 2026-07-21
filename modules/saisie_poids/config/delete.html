@@ -1,0 +1,24 @@
+{{#restrict block=true section="config" level="admin"}}{{/restrict}}
+
+{{if $_GET.type === 'object'}}
+	{{:assign type="object" title="Supprimer un type d'objet"}}
+{{else}}
+	{{:assign type="category" title="Supprimer une catégorie"}}
+{{/if}}
+
+{{#load key=$_GET.key assign="item" type=$type}}
+	{{:assign key=$key}}
+{{else}}
+	{{:error message="L'élément demandé n'existe pas"}}
+{{/load}}
+
+{{#form on="delete"}}
+	{{:delete key=$key}}
+	{{:redirect to="./list.html?type=%s"|args:$type}}
+{{/form}}
+
+{{:admin_header title=$title}}
+
+{{:delete_form legend=$title warning="Confirmer la suppression de '%s' ?"|args:$item.label}}
+
+{{:admin_footer}}

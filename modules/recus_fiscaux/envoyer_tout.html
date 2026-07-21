@@ -1,0 +1,82 @@
+{{#restrict section="accounting" level="write" block=true}}{{/restrict}}
+
+{{:include file="./_config_default.tpl" keep="module.config"}}
+
+{{if !$_POST.selected|count}}
+	{{:error message="Aucun reçu n'a été coché"}}
+{{/if}}
+
+{{#form on="check"}}
+	{{#foreach from=$_POST.selected item="id"}}
+		{{:assign var="selected." id=$id|intval}}
+	{{/foreach}}
+	{{:save from=$selected
+		envoi=$now|date:"Y-m-d H:i:s"
+		validate_schema="./recu.schema.json"
+	}}
+	{{:redirect to="./"}}
+{{/form}}
+
+{{#form on="send_checked"}}
+	{{if !$_POST.email_subject|trim}}
+		{{:error message="Le sujet est vide"}}
+	{{elseif !$_POST.email_body|trim}}
+		{{:error message="Le message est vide"}}
+	{{/if}}
+
+	{{#foreach from=$_POST.selected item="id"}}
+		{{#load id=$id|intval assign="recu"}}
+		{{else}}
+			{{:continue}}
+		{{/load}}
+
+		{{if !$recu.linked_user}}
+			{{:continue}}
+		{{/if}}
+
+		{{#users id=$recu.linked_user debug=true}}
+			{{:assign email=$_email}}
+		{{/users}}
+
+		{{if !$email}}
+			{{:continue}}
+		{{/if}}
+
+		{{:mail
+			to=$email
+			subject=$_POST.email_subject|trim
+			body=$_POST.email_body|trim
+			attach_from="./recu.html?id=%d&print=pdf"|args:$recu.id
+		}}
+		{{:save
+			id=$recu.id
+			envoi=$now|date:"Y-m-d H:i:s"
+			validate_schema="./recu.schema.json"
+		}}
+		{{:assign count="%d+1"|math:$count}}
+	{{/foreach}}
+	{{:redirect to="./?sent=%d"|args:$count}}
+{{/form}}
+
+{{:admin_header title="Envoyer des reçus"}}
+
+{{:form_errors}}
+
+<form method="post" action="">
+	<fieldset>
+		<legend>Envoyer des reçus</legend>
+		<dl>
+			{{:input name="email_subject" type="text" source=$module.config label="Sujet du message" required=true}}
+			{{:input name="email_body" type="textarea" cols="70" rows=7 source=$module.config label="Corps du message" required=true}}
+		</dl>
+	</fieldset>
+	<p class="submit">
+		{{#foreach from=$_POST.selected item="id"}}
+			<input type="hidden" name="selected[]" value="{{$id|intval}}" />
+		{{/foreach}}
+		{{:button type="submit" label="Envoyer" name="send_checked" shape="right" class="main"}}
+	</p>
+</form>
+
+
+{{:admin_footer}}

@@ -1,0 +1,193 @@
+{{#restrict section="accounting" level="write" block=true}}{{/restrict}}
+{{:admin_header title="Modèle d'écriture"}}
+
+{{:assign var="types" 1="Recette" 2="Dépense" 3="Virement" 4="Dette" 5="Créance" 0="Avancé"}}
+
+{{if $_GET.id}}
+	{{#load assign="tpl" id=$_GET.id|intval}}{{/load}}
+{{elseif $_GET.from}}
+	{{#load assign="tpl" id=$_GET.from|intval}}{{/load}}
+	{{:assign var="tpl.id" value=null}}
+{{/if}}
+
+{{if !$tpl}}
+	{{* 2 empty lines by default *}}
+	{{:assign var="tpl.ll.0" l=""}}
+	{{:assign var="tpl.ll.1" l=""}}
+{{/if}}
+
+{{if $_POST.save}}
+	{{if $_POST.t == 0}}
+		{{:assign var="lines" value=$_POST.ll|array_transpose}}
+		{{#foreach from=$lines item="line" key="i"}}
+			{{:assign var="lines.%d.k"|args:$i value=$line.k|or:null}}
+			{{:assign var="lines.%d.p"|args:$i value=$line.p|intval|or:null}}
+			{{:assign var="lines.%d.a"|args:$i value=$line.a|arrayval|keys|key:0|strval|or:null}}
+		{{/foreach}}
+	{{/if}}
+	{{if $tpl.id}}
+		{{:assign type=$tpl.t}}
+	{{else}}
+		{{:assign type=$_POST.t|intval}}
+	{{/if}}
+	{{:save id=$tpl.id
+		validate_schema="./template.schema.json"
+		name=$_POST.name|strval|trim
+		help=$_POST.help|strval|trim|or:null
+		t=$type
+		l=$_POST.l|strval|trim|or:null
+		dt=$_POST.dt|strval|trim|or:null
+		r=$_POST.r|strval|trim|or:null
+		n=$_POST.n|strval|trim|or:null
+		a00=$_POST.a00|money_int
+		pr=$_POST.pr|strval|or:null
+		p=$_POST.p|intval|or:null
+		ar=$_POST.ar|arrayval|keys|key:0|strval|or:null
+		ae=$_POST.ae|arrayval|keys|key:0|strval|or:null
+		ab=$_POST.ab|arrayval|keys|key:0|strval|or:null
+		at=$_POST.at|arrayval|keys|key:0|strval|or:null
+		a3=$_POST.a3|arrayval|keys|key:0|strval|or:null
+		ll=$lines|or:null
+	}}
+	{{:redirect to="./"}}
+{{/if}}
+
+{{#select id, CASE WHEN code IS NOT NULL THEN code || ' — ' || label ELSE label END AS label FROM acc_projects WHERE archived = 0 ORDER BY code, label}}
+	{{:assign var="projects.%d"|args:$id value=$label}}
+{{/select}}
+
+{{:assign var="accounts.r.%s"|args:$tpl.ar value=$tpl.ar}}
+{{:assign var="accounts.e.%s"|args:$tpl.ae value=$tpl.ae}}
+{{:assign var="accounts.b.%s"|args:$tpl.ab value=$tpl.ab}}
+{{:assign var="accounts.t.%s"|args:$tpl.at value=$tpl.at}}
+{{:assign var="accounts.3.%s"|args:$tpl.at value=$tpl.a3}}
+
+<form method="post" action="">
+<fieldset>
+	<legend>{{if !$tpl}}Nouveau modèle{{else}}Modifier le modèle{{/if}}</legend>
+	<dl>
+		{{:input type="text" required=true name="name" label="Nom du modèle" source=$tpl}}
+		{{:input type="textarea" cols=70 rows=10 name="help" label="Aide à la saisie" help="MarkDown autorisé. Ce texte sera affiché sur la page de saisie." source=$tpl}}
+		{{if $tpl.id}}{{:assign type_disabled=true}}{{/if}}
+		{{:input type="select" name="t" label="Type" options=$types required=true source=$tpl disabled=$type_disabled}}
+		{{:input type="text" name="l" label="Libellé" source=$tpl}}
+		{{:input type="date" name="dt" label="Date" source=$tpl}}
+		{{:input type="text" name="r" label="Numéro de pièce comptable" source=$tpl}}
+		{{:input type="textarea" name="n" label="Remarques" source=$tpl}}
+	</dl>
+	<dl class="t1 t2 t3 t4 t5">
+		{{:input type="money" name="a00" label="Montant" source=$tpl}}
+		{{:input type="text" name="pr" label="Référence de paiement" source=$tpl}}
+		{{if $projects}}
+		{{:input type="select" name="p" label="Projet" options=$projects source=$tpl default_empty="— Aucun —"}}
+		{{/if}}
+	</dl>
+	<dl class="t1 t5">
+		{{:input type="list" name="ar" label="Compte de recette" default=$accounts.r target="!acc/charts/accounts/selector.php?types=6&key=code" multiple=false can_delete=true}}
+	</dl>
+	<dl class="t2 t4">
+		{{:input type="list" name="ae" label="Compte de dépense" default=$accounts.e target="!acc/charts/accounts/selector.php?types=5&key=code" multiple=false can_delete=true}}
+	</dl>
+	<dl class="t1 t2 t3">
+		{{:input type="list" name="ab" label="Compte de caisse ou de banque" default=$accounts.b target="!acc/charts/accounts/selector.php?types=1|2|3&key=code" multiple=false can_delete=true}}
+	</dl>
+	<dl class="t3">
+		{{:input type="list" name="at" label="Compte de caisse ou de banque destinataire" default=$accounts.t target="!acc/charts/accounts/selector.php?types=1|2|3&key=code" multiple=false can_delete=true}}
+	</dl>
+	<dl class="t4 t5">
+		{{:input type="list" name="a3" label="Compte de tiers" default=$accounts.3 target="!acc/charts/accounts/selector.php?types=4&key=code" multiple=false can_delete=true}}
+	</dl>
+</fieldset>
+
+<fieldset class="t0">
+	<legend>Lignes de l'écriture</legend>
+	<table class="list transaction-lines auto">
+		<thead>
+			<tr>
+				<td>Compte</td>
+				<td>Débit</td>
+				<td>Crédit</td>
+				<td>Verrouiller saisie</td>
+				<td>Libellé ligne</td>
+				<td>Réf. ligne</td>
+				{{if $projects}}
+				<td>Projet</td>
+				{{/if}}
+				<td></td>
+			</tr>
+		</thead>
+		<tbody>
+		{{:assign var="lock_options" d="Débit" c="Crédit" a="Débit et crédit"}}
+		{{#foreach from=$tpl.ll key="k" item="line"}}
+			<tr>
+				<td class="account">
+					{{:assign var="account" value=null}}
+					{{:assign var="account.%s"|args:$line.a value=$line.a}}
+					{{:input type="list" name="ll[a][]" default=$account target="!acc/charts/accounts/selector.php?targets=4&key=code" multiple=false can_delete=false required=true}}
+				</td>
+				<td class="money">{{:input type="text" name="ll[d][]" default=$line.d size=5}}</td>
+				<td class="money">{{:input type="text" name="ll[c][]" default=$line.c size=5}}</td>
+				<td>{{:input type="select" name="ll[k][]" default=$line.k options=$lock_options default_empty="Non"}}</td>
+				<td>{{:input type="text" name="ll[l][]" default=$line.l}}</td>
+				<td>{{:input type="text" name="ll[r][]" default=$line.r size=10}}</td>
+				{{if $projects}}
+				<td>{{:input type="select" options=$projects name="ll[p][]" default=$line.p}}</td>
+				{{/if}}
+				<td class="acions">
+					{{:button shape="up" title="Déplacer vers le haut" class="up"}}
+					{{:button shape="down" title="Déplacer vers le bas" class="down"}}
+					{{:button label="Enlever" title="Enlever la ligne" shape="minus" class="line_del"}}
+				</td>
+			</tr>
+		{{/foreach}}
+		</tbody>
+	</table>
+	{{:button label="Ajouter une ligne" shape="plus" class="line_add"}}
+</fieldset>
+
+<p class="submit">
+	{{:button type="submit" shape="right" label="Enregistrer" name="save" class="main"}}
+</p>
+</form>
+
+<script type="text/javascript" src="{{$admin_url}}static/scripts/dragdrop-table.js"></script>
+<script type="text/javascript">
+function toggleType()
+{
+	for (var i = 0; i <= 5; i++) {
+		g.toggle('.t' + i, false);
+	}
+
+	g.toggle('.t' + s.value, true);
+}
+
+var s = $('#f_t');
+s.onchange = toggleType;
+
+toggleType();
+
+var t = $('table.transaction-lines tbody')[0];
+
+function deleteLine()
+{
+	if (t.querySelectorAll('tr').length <= 2) {
+		return;
+	}
+
+	this.parentNode.parentNode.remove();
+}
+
+function addLine()
+{
+	var n = t.lastElementChild.cloneNode(true);
+	t.appendChild(n);
+	n.querySelector('.line_del').onclick = deleteLine;
+	n.querySelector('.input-list button').onclick = g.listSelectorButtonClicked;
+	enableTableDragAndDrop(n);
+}
+
+document.querySelectorAll('.line_del').forEach(e => e.onclick = deleteLine);
+$('.line_add')[0].onclick = addLine;
+</script>
+
+{{:admin_footer}}

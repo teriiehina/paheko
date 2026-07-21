@@ -1,0 +1,216 @@
+{{#load assign="claim" key=$_GET.claim}}
+{{else}}
+	{{:error message="Cette note de frais n'existe pas"}}
+{{/load}}
+
+{{#restrict section="accounting" level="write"}}
+	{{:assign is_admin=true}}
+{{else}}
+	{{if $claim.user_id !== $logged_user.id}}
+		{{:error message="L'accès à cette note de frais est interdit"}}
+	{{/if}}
+	{{:assign is_admin=false}}
+{{/restrict}}
+
+{{if $claim.status !== 'draft'}}
+	{{:error message="Cette note de frais n'est pas un brouillon, il n'est pas possible de la modifier."}}
+{{/if}}
+
+{{:include file="./_config_default.tpl" keep="module.config,vehicles"}}
+
+{{:assign var="categories_select.other" value="Autre"}}
+
+{{#load type="category" assign="categories." order="$$.label COLLATE U_NOCASE"}}
+	{{:assign var="categories_select[%s]"|args:$key value=$label}}
+{{/load}}
+
+{{#form on="save"}}
+	{{if !$_POST.label|trim}}
+		{{:error message="Le libellé ne peut être laissé vide"}}
+	{{/if}}
+
+	{{if $_POST.category !== 'other'}}
+		{{#load type="category" key=$_POST.category assign="cat"}}
+		{{else}}
+			{{:error message="Catégorie inconnue"}}
+		{{/load}}
+	{{/if}}
+
+	{{if $cat.expense_type === 'km_vehicle'}}
+		{{if !$_POST.vehicle|trim}}
+			{{:error message="Aucun véhicule sélectionné"}}
+		{{elseif $_POST.distance|intval < 1}}
+			{{:error message="La distance parcourue ne peut être inférieure à 1 km"}}
+		{{/if}}
+
+		{{:include file="./_calcul_bareme.tpl" vehicule=$_POST.vehicle distance=$_POST.distance keep="resultat,calcul,bonus"}}
+		{{if $bonus > 1}}
+			{{:assign bonus="+20% (véhicule électrique)"}}
+		{{else}}
+			{{:assign bonus="Non"}}
+		{{/if}}
+		{{:assign var="vehicle_name" from="vehicles.%s"|args:$_POST.vehicle}}
+		{{:assign
+			amount=$resultat
+			description="Départ : %s\nArrivée : %s\nVéhicule : %s\nDistance : %s km\nCalcul : %s\nBonus : %s\n\n%s"|args:$_POST.depart:$_POST.arrivee:$vehicle_name:$_POST.distance:$calcul:$bonus:$_POST.description|trim
+		}}
+	{{elseif $cat.expense_type === 'km_free'}}
+		{{if $_POST.distance|intval < 1}}
+			{{:error message="La distance parcourue ne peut être inférieure à 1 km"}}
+		{{/if}}
+
+		{{:assign bareme=$cat.price|money_currency:false:false:false}}
+		{{:assign
+			amount="%d*%d"|math:$_POST.distance:$cat.price|money_raw
+			description="Départ : %s\nArrivée : %s\nDistance : %s km\nBarème : %s par km\n\n%s"|args:$_POST.depart:$_POST.arrivee:$_POST.distance:$bareme:$_POST.description|trim
+		}}
+	{{/if}}
+
+	{{:save
+		validate_schema="./line.schema.json"
+		key="uuid"
+		type="line"
+		claim=$claim.key
+		label=$_POST.label|trim
+		category=$cat.label|or:'Autre'
+		account=$cat.account|keys|key:0|strval|or:null
+		description=$description|or:$_POST.description|trim|or:null
+		amount=$amount|or:$_POST.amount|money_int
+		reference=$_POST.reference|trim|or:null
+		date=$_POST.date|parse_date|or:null
+		id_project=$cat.id_project|intval|or:null
+	}}
+	{{:redirect to="details.html?key=%s"|args:$claim.key}}
+{{/form}}
+
+{{:admin_header title="Ajouter une ligne à la note de frais n°%d"|args:$claim.number}}
+
+{{:form_errors}}
+
+<form method="post" action="">
+	<fieldset>
+		<legend>Dépense</legend>
+		<dl>
+			{{:input type="select" name="category" options=$categories_select label="Catégorie" required=true default_empty="— Sélectionner une catégorie —"}}
+		</dl>
+		<dl class="category">
+			{{:input type="text" name="label" label="Libellé" help="Inclure ici une description courte, par exemple 'Abonnement fibre atelier, mars 2023'." required=true}}
+		</dl>
+		<dl class="amount">
+			{{:input type="money" name="amount" label="Montant total" required=true}}
+		</dl>
+	</fieldset>
+	<fieldset class="vehicle km">
+		<legend>Trajet</legend>
+		<dl class="vehicle">
+			{{:input type="select" name="vehicle" options=$vehicles label="Type de véhicule" required=true}}
+			<dd class="carbone">--
+			</dd>
+		</dl>
+		<dl class="vehicle km">
+			{{:input type="text" name="depart" label="Lieu de départ" required=true}}
+			{{:input type="text" name="arrivee" label="Lieu d'arrivée" required=true}}
+			{{:input type="number" name="distance" options=$vehicles label="Distance parcourue" required=true min=1 step=1 size=5}}
+			<dd class="help">
+				Le barème sera calculé lors de l'enregistrement, en fonction de la distance et du type de véhicule.
+			</dd>
+		</dl>
+	</fieldset>
+	<fieldset class="category">
+		<legend>Détails</legend>
+		<dl>
+			{{:input type="date" name="date" label="Date de la dépense"}}
+			{{:input type="text" name="reference" label="Référence du justificatif" help="Par exemple : numéro de facture, nom du magasin, etc."}}
+			{{:input type="textarea" name="description" label="Description"}}
+			<dd class="alert block" id="notes"></dd>
+		</dl>
+	</fieldset>
+
+	<p class="submit">
+		{{:button type="submit" shape="right" label="Enregistrer" name="save" class="main"}}
+	</p>
+</form>
+
+<script type="text/javascript">
+var categories = {{$categories|values|json_encode|raw}};
+categories.push({"label": "Autre", "key": "other", "expense_type": "other"});
+
+var s = $('#f_category');
+
+function selectCategory() {
+	var category = null;
+
+	Object.values(categories).forEach((c) => {
+		if (c.key !== s.value) {
+			return;
+		}
+
+		if (c.expense_type === 'km_vehicle' && localStorage.getItem('last_vehicle')) {
+			v.value = localStorage.getItem('last_vehicle');
+		}
+
+		g.toggle('.category, p.submit', true);
+		g.toggle('.vehicle', c.expense_type === 'km_vehicle');
+		g.toggle('.amount', c.expense_type !== 'km_vehicle' && c.expense_type !== 'km_free');
+		g.toggle('.km', c.expense_type === 'km_vehicle' || c.expense_type === 'km_free');
+
+		var notes = $('#notes');
+
+		g.toggle(notes, !!c.notes);
+		notes.innerText = c.notes || '';
+		notes.innerHTML = notes.innerHTML.replace(/\r?\n|\r/, "<br>");
+
+		if (c.price) {
+			$('#f_amount').value = g.formatMoney(c.price);
+		}
+	});
+}
+
+function selectVehicle() {
+	var g;
+	if (v.value == 'speedbike') {
+		g = 11;
+	}
+	else if (v.value.substr(0, 5) === 'emoto' || v.value === 'ecyclomoteur') {
+		g = 80;
+	}
+	else if (v.value === 'moto6cv') {
+		g = 476;
+	}
+	else if (v.value.match(/moto|cyclomoteur/)) {
+		g = 350;
+	}
+	else if (v.value === 'e3cv') {
+		g = 64;
+	}
+	else if (v.value === 'e4cv') {
+		g = 99;
+	}
+	else if (v.value.substr(0, 1) === 'e') {
+		g = 139;
+	}
+	else {
+		g = 300;
+	}
+
+	var msg = g >= 100 ? '<b class="error">Véhicule très polluant ☹</b>' : '<span class="confirm">Véhicule peu polluant 😊</span>';
+	msg += '<br />Émet <b>' + g + '</b> gCO2/km.';
+	$('.carbone')[0].innerHTML = msg;
+}
+
+g.toggle('.category, .vehicle, .amount, p.submit', false);
+s.onchange = selectCategory;
+
+selectCategory();
+
+var v = $('#f_vehicle');
+
+v.onchange = () => {
+	localStorage.setItem('last_vehicle', v.value);
+	selectVehicle();
+};
+selectVehicle();
+
+</script>
+
+{{:admin_footer}}

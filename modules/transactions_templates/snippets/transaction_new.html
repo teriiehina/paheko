@@ -1,0 +1,56 @@
+{{if !$_POST}}
+
+<div id="templateSelector">
+	<div>
+		Saisir à partir d'un modèle&nbsp;:
+	</div>
+
+	{{:assign var="options."
+		class="default"
+		value=""
+		href="?"
+		label="Sélectionner un modèle"
+	}}
+	{{#load order="$$.name" assign="row"}}
+		{{if $_GET.tplid == $id}}
+			{{:assign tpl_help=$row.help}}
+		{{/if}}
+		{{#foreach from=$row item="value" key="key"}}
+			{{if $key === 'id'}}
+				{{:assign var="qs.tplid" value=$value}}
+			{{elseif $key !== 'name' && $key !== 'help'}}
+				{{:assign var="qs.%s"|args:$key value=$value}}
+			{{/if}}
+		{{/foreach}}
+		{{:assign qs=$qs|http_build_query}}
+		{{:assign var="options."
+			value=$id
+			href="?"|cat:$qs
+			label=$name
+		}}
+	{{/load}}
+
+	{{:dropdown options=$options value=$_GET.tplid|strval title="Sélectionner un modèle"}}
+
+	<div style="text-align: right">
+		{{:linkbutton shape="edit" href=$module.url label="Modifier les modèles"}}
+	</div>
+</div>
+
+<style type="text/css" media="screen and (min-width: 980px)">
+#templateSelector {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	gap: 1em;
+	margin: 1em;
+	align-items: center
+}
+</style>
+
+{{/if}}
+
+{{if $tpl_help}}
+	<div class="block help">
+		{{$tpl_help|markdown|raw}}
+	</div>
+{{/if}}

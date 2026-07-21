@@ -1,0 +1,52 @@
+{{:assign type=$_GET.type|or:'entry' period=$_GET.period|or:'quarter'}}
+
+{{:admin_header title="Statistiques" current="module_saisie_poids"}}
+
+{{:include file="_nav.html" current="stats"}}
+
+{{if $period === 'year'}}
+	{{:assign period="strftime('%Y', $$.date)"}}
+{{elseif $period === 'quarter'}}
+	{{:assign period="strftime('%Y-Q', $$.date) || CAST((strftime('%m', $$.date) + 2) / 3 AS string)"}}
+{{else}}
+	{{:assign period="strftime('%Y-%m', $$.date)"}}
+{{/if}}
+
+{{if $type === 'declare'}}
+	{{:assign
+		group="$$.ecologic"
+		group_label="Type opé"
+		where="$$.ecologic IS NOT NULL AND ($$.type = 'exit' OR $$.type = 'entry')"
+	}}
+{{elseif $type === 'entry'}}
+	{{:assign group="$$.category" group_label="Provenance" where="$$.type = 'entry'"}}
+{{else}}
+	{{:assign group="$$.category" group_label="Motif" where="$$.type = 'exit'"}}
+{{/if}}
+
+{{#list
+	select="%s AS 'Période'; %s AS '%s'; SUM($$.qty) AS 'Qté'; SUM($$.total_weight) AS 'Poids'"|args:$period:$group:$group_label
+	order=1
+	desc=true
+	group="%s, %s"|args:$period:$group
+	where=$where
+	count="COUNT(DISTINCT %s)"|args:$group
+	}}
+	<tr>
+		<th>
+			{{if $prev_period !== $col1}}
+				{{$col1}}
+				{{:assign prev_period=$col1}}
+			{{/if}}
+		</th>
+		<td>{{$col2}}</td>
+		<td class="num">{{$col3}}</td>
+		<td class="money">{{$col4|weight:true:true}}</td>
+		<td class="actions">
+		</td>
+	</tr>
+{{else}}
+	<p class="block alert">Il n'y a aucun résultat pour ce critère.</p>
+{{/list}}
+
+{{:admin_footer}}

@@ -1,0 +1,429 @@
+{{#restrict block=true section="accounting" level="write"}}
+{{/restrict}}
+
+{{if $module.config.type_asso !== 'syndicat'}}
+	{{if !$module.config.objet_asso}}
+		{{:redirect force="config.html?msg=MISSING"}}
+	{{elseif !$module.config.numero_asso}}
+		{{:redirect force="config.html?msg=MISSING_NUMBER"}}
+	{{/if}}
+{{/if}}
+
+{{:include file="./_config_default.tpl" keep="module.config"}}
+
+{{if $_GET.user}}
+	{{#foreach from=$_GET.user key="id" item="user"}}
+		{{:assign id_user=$id|intval}}
+	{{/foreach}}
+{{elseif $_GET.id_user}}
+	{{:assign id_user=$_GET.id_user|intval}}
+{{/if}}
+
+{{:assign var="default.date" value=$now}}
+
+{{#load limit=1}}
+	{{:assign id_choice=false}}
+{{else}}
+	{{:assign id_choice=true}}
+{{/load}}
+
+{{#form on="create"}}
+	{{if !$_POST.date|trim|parse_date}}
+		{{:error message="Date d'émission invalide ou vide."}}
+	{{elseif !$_POST.nom|trim}}
+		{{:error message="Le nom du donateur ne peut être laissé vide."}}
+	{{elseif !$_POST.adresse|trim}}
+		{{:error message="L'adresse du donateur ne peut être laissée vide."}}
+	{{/if}}
+
+
+	{{if $_POST.entreprise}}
+		{{:assign montant_nature=$_POST.montant_nature|money_int
+			montant_numeraire=$_POST.montant_numeraire|money_int}}
+		{{:assign total="%d+%d"|math:$montant_numeraire:$montant_nature}}
+
+		{{if !$montant_nature && !$montant_numeraire}}
+			{{:error message="Aucun montant n'a été saisi."}}
+		{{elseif $montant_numeraire && !$_POST.moyens_especes && !$_POST.moyens_cheques && !$_POST.moyens_autres}}
+			{{:error message="Aucun moyen de paiement n'a été coché."}}
+		{{elseif $montant_nature && !$_POST.description_nature|trim}}
+			{{:error message="La description des dons en nature doit être renseignée."}}
+		{{elseif !$_POST.entreprise_forme|trim}}
+			{{:error message="La forme juridique de l'entreprise doit être renseignée."}}
+		{{elseif !$_POST.entreprise_numero|trim}}
+			{{:error message="Le numéro SIREN de l'entreprise doit être renseigné."}}
+		{{/if}}
+	{{else}}
+		{{:assign total=$_POST.montant|money_int}}
+
+		{{if !$_POST.numeraire && !$_POST.nature && !$_POST.abandon_frais}}
+			{{:error message="Le type de don n'a pas été sélectionné."}}
+		{{elseif $_POST.numeraire && !$_POST.moyens_especes && !$_POST.moyens_cheques && !$_POST.moyens_autres}}
+			{{:error message="Aucun moyen de paiement n'a été coché."}}
+		{{elseif !$total || $total < 0}}
+			{{:error message="Le montant du don ne peut être laissé vide."}}
+		{{/if}}
+	{{/if}}
+
+	{{:assign id_transaction=null}}
+
+	{{if $_POST.id_transaction|trim|strlen}}
+		{{:assign id_transaction=$_POST.id_transaction|explode:','|map:intval}}
+		{{:assign in_transaction="value"|sql_where:'IN':$id_transaction}}
+		{{#load each="linked_transactions" where="$$.linked_transactions IS NOT NULL AND $$.annule = 0 AND %s"|args:$in_transaction}}
+			{{:error message="L'écriture #%d est déjà utilisée dans le reçu n°%d. Il faut déjà annuler ce reçu pour pouvoir le re-créer."|args:$value:$id}}
+		{{/load}}
+	{{/if}}
+
+	{{if $id_choice && $_POST.number|intval > 0}}
+		{{:assign number=$_POST.number|intval}}
+	{{else}}
+		{{:assign number=null}}
+	{{/if}}
+
+	{{:include file="./_recu.html" capture="recu"}}
+	{{:save
+		validate_schema="./recu.schema.json"
+		id=$number
+		assign_new_id="new_id"
+		nom=$_POST.nom|trim
+		date=$_POST.date|parse_date
+		montant=$total
+		linked_user=$_POST.id_user|intval|or:null
+		linked_transactions=$id_transaction
+		id_year=$_POST.id_year|intval|or:null
+		annule=false
+		entreprise=$_POST.entreprise|boolval
+		recu=$recu|trim|minify
+	}}
+
+	{{if !$dialog}}
+		{{:redirect to="voir.html?id=%d"|args:$new_id}}
+	{{else}}
+		{{:redirect to="recu.html?id=%d"|args:$new_id}}
+	{{/if}}
+{{/form}}
+
+{{:admin_header title="Créer un nouveau reçu fiscal" current="acc"}}
+
+{{:assign var="champs_adresse" value=$module.config.champs_adresse|sql_user_fields:"u":" — "}}
+{{:assign var="champs_nom" value=$config.user_fields.name|sql_user_fields:"u"}}
+{{:assign var="champ_entreprise_numero" value=$module.config.champ_entreprise_numero|sql_user_fields:"u"}}
+{{:assign var="champ_entreprise_forme" value=$module.config.champ_entreprise_forme|sql_user_fields:"u"}}
+
+{{:assign var="codes_don" value=$module.config.comptes_don|keys|map:strval}}
+{{:assign var="codes_don_abandon_frais" value=$module.config.comptes_don_abandon_frais|keys|map:strval}}
+{{:assign var="codes_don_nature" value=$module.config.comptes_don_nature|keys|map:strval}}
+{{:assign var="codes_especes" value=$module.config.comptes_especes|keys|map:strval}}
+{{:assign var="codes_cheques" value=$module.config.comptes_cheques|keys|map:strval}}
+
+{{if $id_user}}
+	{{#select *, !champs_adresse AS adresse, !champs_nom AS nom FROM users u WHERE id = {$id_user|intval};
+		!champs_adresse=$champs_adresse
+		!champs_nom=$champs_nom
+	}}
+		{{:assign var="default.address" value=$adresse|trim:" —"}}
+		{{:assign var="default.name" value=$nom}}
+		{{:assign var="default.entreprise_numero" from=$module.config.champ_entreprise_numero}}
+		{{:assign var="default.entreprise_forme" from=$module.config.champ_entreprise_forme}}
+	{{else}}
+		{{:error message="Ce membre n'existe pas."}}
+	{{/select}}
+
+	{{:assign var="default.id_user" value=$id_user}}
+
+	{{* Récupération des comptes et soldes *}}
+	{{#select
+		*,
+		COUNT(DISTINCT id) AS nombre,
+		GROUP_CONCAT(id_transaction) AS id_transaction,
+		SUM(total) AS total,
+		SUM(total_especes) AS total_especes,
+		SUM(total_cheques) AS total_cheques,
+		SUM(total_abandon_frais) AS total_abandon_frais,
+		SUM(total_nature) AS total_nature,
+		SUM(total_numeraire) AS total_numeraire,
+		year,
+		strftime('%d/%m/%Y', date) AS date
+		FROM (
+			SELECT
+			t.id_year AS id,
+			GROUP_CONCAT(DISTINCT t.id) AS id_transaction,
+			t.date,
+			SUM(l1.credit) AS total,
+			strftime('%Y', t.date) AS year,
+			-- Paiements en espèces?
+			(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+				INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_especes
+				WHERE l2.credit = 0 AND l2.id_transaction = t.id LIMIT 1) AS total_especes,
+			-- Paiements en chèques?
+			(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+				INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_cheques
+				WHERE l2.credit = 0 AND l2.id_transaction = t.id LIMIT 1) AS total_cheques,
+			-- Dons en abandon de frais ?
+			(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+				INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_don_abandon_frais
+				WHERE l2.debit = 0 AND l2.id_transaction = t.id) AS total_abandon_frais,
+			-- Dons en nature ?
+			(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+				INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_don_nature
+				WHERE l2.debit = 0 AND l2.id_transaction = t.id) AS total_nature,
+			-- Dons en numeraire ?
+			(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+				INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_don
+				WHERE l2.debit = 0 AND l2.id_transaction = t.id) AS total_numeraire
+			FROM acc_transactions t
+			INNER JOIN (SELECT DISTINCT tu.id_transaction, tu.id_user FROM acc_transactions_users tu WHERE tu.id_user = {$id_user}) tu ON tu.id_transaction = t.id
+			INNER JOIN acc_transactions_lines l1 ON l1.id_transaction = t.id AND l1.debit = 0
+			INNER JOIN acc_accounts a1 ON a1.id = l1.id_account AND (a1.!codes_don_nature OR a1.!codes_don OR a1.!codes_don_abandon_frais)
+			GROUP BY t.id
+		) GROUP BY year ORDER BY year;
+		!codes_don_nature="code"|sql_where:"IN":$codes_don_nature
+		!codes_don_abandon_frais="code"|sql_where:"IN":$codes_don_abandon_frais
+		!codes_don="code"|sql_where:"IN":$codes_don
+		!codes_especes="code"|sql_where:"IN":$codes_especes
+		!codes_cheques="code"|sql_where:"IN":$codes_cheques
+	}}
+		{{:assign .="user_years.%d"|args:$id}}
+	{{/select}}
+
+	{{#foreach from=$user_years item="data"}}
+		{{:assign total_money=$data.total|money_currency}}
+		{{:assign var="user_select.%d"|args:$data.id value="%d (%s)"|args:$data.year:$total_money}}
+	{{/foreach}}
+
+	{{if $user_select|count}}
+		{{* Reverse order so that last year is first *}}
+		{{:assign user_select=$user_select|ksort|reverse}}
+	{{/if}}
+
+	<script type="text/javascript">
+	var user_years = {{$user_years|json_encode|raw}};
+	</script>
+{{elseif $_GET.id_transaction}}
+	{{#select
+		u.id AS id_user,
+		t.id AS id_transactions,
+		SUM(l1.credit) AS total,
+		t.date AS date,
+		!champs_nom AS name,
+		!champs_adresse AS address,
+		!champ_entreprise_numero AS entreprise_numero,
+		!champ_entreprise_forme AS entreprise_forme,
+		-- Paiements en espèces?
+		(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+			INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_especes
+			WHERE l2.credit = 0 AND l2.id_transaction = t.id LIMIT 1) AS total_especes,
+		-- Paiements en chèques?
+		(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+			INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_cheques
+			WHERE l2.credit = 0 AND l2.id_transaction = t.id LIMIT 1) AS total_cheques,
+		-- Dons en abandon de frais ?
+		(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+			INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_don_abandon_frais
+			WHERE l2.debit = 0 AND l2.id_transaction = t.id) AS total_abandon_frais,
+		-- Dons en nature ?
+		(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+			INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_don_nature
+			WHERE l2.debit = 0 AND l2.id_transaction = t.id) AS total_nature,
+		-- Dons en numeraire ?
+		(SELECT SUM(l2.credit + l2.debit) FROM acc_transactions_lines l2
+			INNER JOIN acc_accounts a2 ON a2.id = l2.id_account AND a2.!codes_don
+			WHERE l2.debit = 0 AND l2.id_transaction = t.id) AS total_numeraire
+		FROM acc_transactions t
+		LEFT JOIN acc_transactions_users tu ON tu.id_transaction = t.id
+		LEFT JOIN users u ON u.id = tu.id_user
+		INNER JOIN acc_transactions_lines l1 ON l1.id_transaction = t.id AND l1.debit = 0
+		INNER JOIN acc_accounts a1 ON a1.id = l1.id_account AND (a1.!codes_don_nature OR a1.!codes_don OR a1.!codes_don_abandon_frais)
+		WHERE t.id = {$_GET.id_transaction|intval}
+		;
+		!champs_nom=$champs_nom
+		!champs_adresse=$champs_adresse
+		!champ_entreprise_numero=$champ_entreprise_numero
+		!champ_entreprise_forme=$champ_entreprise_forme
+		!codes_don_nature="code"|sql_where:"IN":$codes_don_nature
+		!codes_don_abandon_frais="code"|sql_where:"IN":$codes_don_abandon_frais
+		!codes_don="code"|sql_where:"IN":$codes_don
+		!codes_especes="code"|sql_where:"IN":$codes_especes
+		!codes_cheques="code"|sql_where:"IN":$codes_cheques
+
+		assign="default"
+	}}
+	{{else}}
+		{{:error message="Numéro d'écriture inconnu"}}
+	{{/select}}
+
+	{{if $default.total_numeraire}}
+		{{:assign var="default.numeraire" value=$default.total_numeraire|boolval}}
+
+		{{if !$default.total_especes && !$default.total_cheques}}
+			{{:assign var="default.autres" value=true}}
+		{{/if}}
+	{{/if}}
+{{elseif $_GET.type === 'blank'}}
+	{{#years order="end_date DESC"}}
+		{{:assign var="years_select.%d"|args:$id value=$label}}
+	{{/years}}
+{{/if}}
+
+{{if !$dialog}}
+<nav class="tabs">
+	{{:linkbutton href="./" label="Retour à la liste des reçus" shape="left"}}
+</nav>
+{{/if}}
+
+{{:form_errors}}
+
+{{if !$_GET.type}}
+	<form method="get" action="">
+		<fieldset>
+			<legend>Nouveau reçu</legend>
+			<dl>
+				{{:input type="radio-btn" name="type" value="user" label="Créer un reçu pour un membre"}}
+				{{:input type="radio-btn" name="type" value="transaction" label="Créer un reçu à partir d'une écriture"}}
+				{{:input type="radio-btn" name="type" value="blank" label="Créer un reçu vierge"}}
+			</dl>
+		</fieldset>
+		<fieldset class="type-user hidden">
+			<legend>Reçu pour un membre</legend>
+			<dl>
+				{{:input type="list" multiple=false name="user" label="Sélectionner un membre" target="!users/selector.php" required=true}}
+			</dl>
+		</fieldset>
+		<fieldset class="type-transaction hidden">
+			<legend>Reçu pour une écriture</legend>
+			<dl>
+				{{:input type="number" name="id_transaction" label="Indiquer le numéro de l'écriture" min=0 required=true}}
+			</dl>
+		</fieldset>
+
+		<p class="submit hidden">
+			{{if $dialog}}
+			<input type="hidden" name="_dialog" value="" />
+			{{/if}}
+			{{:button type="submit" shape="right" label="Continuer" class="main"}}
+		</p>
+	</form>
+
+	<script type="text/javascript">
+	$('[name="type"]').forEach((i) => {
+		i.onchange = selectType;
+	});
+
+	function selectType() {
+		var type = $('[name="type"]:checked')[0].value;
+
+		g.toggle('.type-user', type == 'user', false);
+		g.toggle('.type-transaction', type == 'transaction', false);
+		g.toggle('.submit', true, false);
+		g.resizeParentDialog();
+	}
+	</script>
+
+{{else}}
+	<form method="post" action="">
+		{{if $id_choice}}
+			<fieldset>
+				<legend>Numéro du premier reçu</legend>
+				<p class="help">Si vous avez déjà créé des reçus pour cette année, modifiez ce numéro pour avoir une numérotation qui se suit. Le numéro des reçus suivants ne pourra pas être modifié.</p>
+				<dl>
+					{{:input type="number" step=1 name="number" label="Numéro du reçu" required=true default=1}}
+				</dl>
+			</fieldset>
+		{{/if}}
+
+		<fieldset>
+			<legend>Bénéficiaire</legend>
+			<dl>
+				{{:input type="text" name="nom" label="Nom du bénéficiaire" required=true default=$default.name}}
+				{{:input type="textarea" cols="50" rows="3" name="adresse" label="Adresse du bénéficiaire" required=true default=$default.address}}
+				{{if $module.config.art238bis && $module.config.type_asso !== 'syndicat'}}
+					{{if $default.entreprise_forme && $default.entreprise_numero}}
+						{{:assign is_entreprise=1}}
+					{{/if}}
+					{{:input type="checkbox" name="entreprise" value=1 label="Le bénéficiaire est une entreprise" default=$is_entreprise}}
+				{{/if}}
+			</dl>
+			{{if $module.config.type_asso !== 'syndicat'}}
+			<dl class="entreprise">
+				{{:input type="text" required=true name="entreprise_forme" label="Forme juridique" source=$default}}
+				{{:input type="text" required=true name="entreprise_numero" label="Numéro SIREN" source=$default}}
+			</dl>
+			{{/if}}
+		</fieldset>
+
+		<fieldset>
+			<legend>Période des reçus</legend>
+			<dl>
+				{{if $user_select}}
+					{{:input type="select" name="id_year" label="Pour quelle année le reçu doit-il être généré ?" required=true options=$user_select}}
+					{{:input type="hidden" name="periode_annee"}}
+				{{elseif $default.date}}
+					{{:input type="date" name="periode_date" required=true label="Date de versement du don" default=$default.date}}
+				{{else}}
+					{{:input type="year" name="periode_annee" required=true label="Année de versement des dons"}}
+				{{/if}}
+				{{:input type="date" name="date" required=true label="Date du reçu" default=$default.date}}
+				{{if !$user_select && $years_select}}
+					{{:input type="select" name="id_year" required=true label="Exercice concerné" options=$years_select}}
+				{{/if}}
+			</dl>
+		</fieldset>
+
+		<fieldset class="particulier">
+			<legend>Versements</legend>
+			<dl>
+				{{:input type="money" name="montant" required=true label="Montant des versements" default=$default.total}}
+			</dl>
+
+			{{if $module.config.type_asso === 'syndicat'}}
+				<input type="hidden" name="numeraire" value="1" id="f_numeraire_1" />
+			{{else}}
+				<dl>
+					<dt>Type de don</dt>
+					{{:input type="checkbox" name="numeraire" value="1" label="Don en numéraire (en euros)" default=1}}
+					{{:input type="checkbox" name="abandon_frais" value="1" label="Frais engagés par les bénévoles, dont ils renoncent expressément au remboursement" default=$default.abandon_frais}}
+					{{:input type="checkbox" name="nature" value="1" label="Don en nature" help="Par exemple don de matériel, prêt de local, prestation de service…" default=$defaut.nature}}
+				</dl>
+			{{/if}}
+		</fieldset>
+
+		<fieldset class="entreprise">
+			<legend>Dons et versements effectués par l’entreprise</legend>
+			<dl>
+				{{:input type="money" name="montant_nature" required=true label="Montant des dons en nature" default=$default.total_nature|or:0 help="Inscrire ici le chiffre zéro si aucun don en nature n'a été effectué."}}
+				{{:input type="textarea" rows=5 cols=70 name="description_nature" required=true label="Description exhaustive des dons en nature" help="Décrire ici la nature et quantité des biens et prestations reçus et acceptés, et le détail des salariés mis à disposition"}}
+				{{:input type="money" name="montant_numeraire" required=true label="Montant des dons en numéraire" default=$default.total_numeraire|or:0 help="Inscrire ici le chiffre zéro si aucun don numéraire n'a été effectué."}}
+			</dl>
+		</fieldset>
+
+		<fieldset class="hidden type-numeraire">
+			<legend>Moyens de paiement</legend>
+			{{if $module.config.type_asso !== 'syndicat'}}
+			<p class="help">
+				Pour les dons en numéraire (en euros).
+			</p>
+			{{/if}}
+			<dl>
+				{{:input type="checkbox" name="moyens_especes" value=1 label="Espèces" default=$default.total_especes|boolval}}
+				{{:input type="checkbox" name="moyens_cheques" value=1 label="Chèques" default=$default.total_cheques|boolval}}
+				{{:input type="checkbox" name="moyens_autres" value=1 label="Virement, prélèvement, carte bancaire, ou autre" default=$default.autres}}
+			</dl>
+		</fieldset>
+
+		<p class="help">
+			Note&nbsp;: un reçu créé ne peut plus être modifié, mais seulement annulé.
+		</p>
+
+		<p class="submit">
+			<input type="hidden" name="id_user" value="{{$default.id_user}}" />
+			<input type="hidden" name="id_transaction" value="{{$default.id_transaction}}" />
+			{{:button type="button" name="preview" shape="eye" label="Prévisualiser"}}
+			{{:button type="submit" name="create" shape="right" label="Créer ce reçu" class="main"}}
+		</p>
+	</form>
+
+	<script type="text/javascript" src="nouveau_form.js?2024-03-13" defer="defer"></script>
+{{/if}}
+
+{{:admin_footer}}

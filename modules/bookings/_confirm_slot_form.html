@@ -1,0 +1,69 @@
+{{if $event === null}}
+	{{:error admin="Missing mandatory variable"}}
+{{/if}}
+
+{{:form_errors}}
+
+{{:assign date=$_GET.slot_time|parse_datetime}}
+
+{{if !$date}}
+	{{:error message="Date invalide"}}
+{{/if}}
+
+<form method="post" action="" class="booking_event">
+	<fieldset>
+		<legend>Merci de confirmer la réservation</legend>
+
+		<section class="my_bookings">
+			<article>
+				<h5>Vous allez réserver pour&nbsp;:</h5>
+				<h2>{{$event.label}}</h2>
+				<h3>{{$date|date_long}} à <span>{{$date|date_hour}}</span></h3>
+				<p>{{:linkbutton shape="left" label="Annuler" href="?event=%s"|args:$event.key}}
+			</article>
+		</section>
+	</fieldset>
+
+	<fieldset class="info">
+		<legend>Mes informations</legend>
+		<article>
+		<dl>
+			{{:input type="text" name="name" label="Prénom et nom" required=true default=$logged_user._name onfocus="this.select()"}}
+			{{if !$event.email}}
+				{{:input type="checkbox" name="notify" value="1" label="Recevoir une confirmation d'inscription par e-mail" onchange="g.toggle('dl.email', this.checked);" help="facultatif"}}
+			{{/if}}
+		</dl>
+		{{if !$event.email && !$_POST.email}}
+			{{:assign email_hidden=true}}
+			{{#restrict section="users" level=$module.config.access}}
+				{{:assign email_disabled=false}}
+			{{else}}
+				{{if $logged_user._email}}
+					{{:assign email_disabled=true}}
+				{{/if}}
+			{{/restrict}}
+		{{/if}}
+		<dl class="email{{if $email_hidden}} hidden{{/if}}">
+			{{:input type="email" name="email" label="Adresse e-mail" required=true help="Une confirmation d'inscription vous sera envoyée à cette adresse" default=$logged_user._email onfocus="this.select()" onkeyup="g.toggle('.mycaptcha', this.value != '');" disabled=$email_disabled}}
+		</dl>
+		<dl>
+			{{#foreach from=$event.fields key="i" item="field"}}
+				{{if $field.type == 'checkbox'}}
+					{{:assign value="Coché"}}
+				{{else}}
+					{{:assign value=null}}
+				{{/if}}
+				{{:input name="fields[%d]"|args:$i label=$field.label type=$field.type help=$field.help required=$field.required value=$value boolean_text_value=true}}
+
+			{{/foreach}}
+		</dl>
+		</article>
+	</fieldset>
+
+	{{if !$logged_user}}
+		<div class="mycaptcha{{if !$_POST.email}} hidden{{/if}}"><h4>Vérification contre les robots</h4>{{:captcha html=true}}</div>
+	{{/if}}
+	<p class="submit">
+		{{:button type="submit" name="book" label="Confirmer la réservation" shape="right" class="main"}}
+	</p>
+</form>

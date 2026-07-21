@@ -1,0 +1,74 @@
+[
+	{
+		"type": "category",
+		"label": "Autre (particulier, déchètterie non conventionnée, etc.)",
+		"ecologic": "LIV",
+		"target": "entry"
+	},
+	{
+		"type": "category",
+		"label": "Déchètterie conventionnée Ecologic",
+		"ecologic": "PRE",
+		"target": "entry"
+	},
+	{
+		"type": "category",
+		"label": "Don magasin cycles",
+		"ecologic": "LIV",
+		"target": "entry"
+	},
+	{
+		"type": "category",
+		"label": "Destruction",
+		"ecologic": null,
+		"target": "exit"
+	},
+	{
+		"type": "category",
+		"label": "Vente",
+		"ecologic": "DEC_REE",
+		"target": "exit"
+	},
+	{
+		"type": "category",
+		"label": "Rachat de matériel",
+		"ecologic": null,
+		"target": "entry"
+	},
+	{
+		"type": "object",
+		"label": "Accessoire / pièce vélo",
+		"weight": 600,
+		"target": "entry"
+	},
+	{
+		"type": "object",
+		"label": "Vélo enfant",
+		"weight": 10000,
+		"target": "entry"
+	},
+	{
+		"type": "object",
+		"label": "Vélo adulte",
+		"weight": 12500,
+		"target": "entry"
+	},
+	{
+		"type": "object",
+		"label": "Trottinette, skateboard, roller",
+		"weight": 4000,
+		"target": "entry"
+	},
+	{
+		"type": "object",
+		"label": "Pièce ou accessoire vélo",
+		"weight": null,
+		"target": "exit"
+	},
+	{
+		"type": "object",
+		"label": "Vélo",
+		"weight": null,
+		"target": "exit"
+	}
+]

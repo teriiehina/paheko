@@ -1,0 +1,7 @@
+{{if $transaction.reference|regexp_match:"/\bNDF-\d+\b/"}}
+	{{:assign var="num" value=$transaction.reference|regexp_replace:"/^.*\bNDF-(\d+)\b.*$/":"$1"|intval}}
+	<h2 class="ruler">{{$module.label}}</h2>
+	<p class="actions-center">
+		{{:linkbutton href="%sdetails.html?num=%d"|args:$module.url:$num label="Voir la note de frais associée" shape="eye"}}
+	</p>
+{{/if}}
